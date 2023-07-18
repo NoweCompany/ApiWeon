@@ -1,0 +1,23 @@
+services:
+  mysqldb:
+    image: mysql
+    container_name: mysqldb
+    hostname: contMysql
+    restart: always
+    environment:
+      - MYSQL_ROOT_PASSWORD=senhaForte
+      - MYSQL_DATABASE=nowe
+    ports:
+      - 3306:3306
+
+  apiweon:
+    build: ./
+    container_name: apiweon
+    volumes:
+      - .:/home/api
+    ports:
+      - 3300:3300
+    command: npm run dev
+    depends_on:
+      - mysqldb
+    restart: always
