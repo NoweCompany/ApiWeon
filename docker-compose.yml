@@ -1,16 +1,17 @@
+version: '3'
 services:
   mysqldb:
     image: mysql
     container_name: mysqldb
     hostname: contMysql
     restart: always
-    networks:
-      - network1
     environment:
       - MYSQL_ROOT_PASSWORD=senhaForte
       - MYSQL_DATABASE=nowe
     ports:
       - 3307:3306
+    networks:
+      - mynetwork
 
   apiweon:
     build: ./
@@ -24,10 +25,7 @@ services:
       - mysqldb
     restart: always
     networks:
-      - network1
+      - mynetwork
 
 networks:
-  network1:
-    name: "ApiWeon"
-    external: true
-
+  mynetwork:
