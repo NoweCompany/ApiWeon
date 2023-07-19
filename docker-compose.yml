@@ -4,6 +4,8 @@ services:
     container_name: mysqldb
     hostname: contMysql
     restart: always
+    networks:
+      - network1
     environment:
       - MYSQL_ROOT_PASSWORD=senhaForte
       - MYSQL_DATABASE=nowe
@@ -21,3 +23,11 @@ services:
     depends_on:
       - mysqldb
     restart: always
+    networks:
+      - network1
+
+networks:
+  network1:
+    name: "ApiWeon"
+    external: true
+
