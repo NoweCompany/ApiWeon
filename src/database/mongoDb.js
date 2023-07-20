@@ -52,12 +52,12 @@ class Mongo {
 
   async existCollection(collectionName) {
     try {
-      const collections = (await this.connection.db(this.database).listCollections().toArray()).map((collec) => collec.name);
+      const database = this.connection.db(this.database);
+      const arrayCollection = await database.listCollections().toArray();
 
-      if (collections.includes(collectionName)) return true;
-      return false;
+      return arrayCollection.some((collection) => collection.name === collectionName);
     } catch (err) {
-      throw new Error('A collection não exite');
+      throw new Error('Erro ao verificar a existência da coleção');
     }
   }
 
