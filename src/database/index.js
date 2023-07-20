@@ -5,7 +5,6 @@ import Company from '../models/CompanysModel';
 
 import dbConfig from '../config/dbConfig';
 
-console.log(dbConfig);
 const conect = new Sequelize(dbConfig);
 
 async function virifyConect(sequelize) {

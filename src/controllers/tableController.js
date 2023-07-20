@@ -12,15 +12,16 @@ class TableController {
     if (!existPermission) throw new Error('Este usuario não possui a permissao necessarias');
 
     const mongoDb = new MongoDb(req.company);
-    const connection = await mongoDb.connect();
+    const client = await mongoDb.connect();
 
     try {
       await mongoDb.existDb(req.company);
+      const database = client.db(req.company);
 
       const { collectionName } = req.body;
       if (!collectionName) throw new Error('Envie os valores corretos');
 
-      const collections = (await connection.db().listCollections().toArray()).map((vl) => vl.name);
+      const collections = (await database.listCollections().toArray()).map((vl) => vl.name);
 
       if (collections.includes(collectionName)) {
         return res.status(400).json({
@@ -28,7 +29,7 @@ class TableController {
         });
       }
 
-      await connection.db().createCollection(collectionName);
+      await database.createCollection(collectionName);
 
       return res.status(200).json({
         success: 'Predefinição criada com sucesso',
