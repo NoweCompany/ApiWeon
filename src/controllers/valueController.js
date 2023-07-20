@@ -27,11 +27,6 @@ class ValueController {
 
       const database = client.db(req.company);
       const collection = database.collection(collectionName);
-      const rule = await collection.options();
-
-      const { properties } = rule.validator.$jsonSchema;
-
-      if (Object.keys(properties) > Object.keys(values)) throw new Error('O objeto deve seguir as regras de validação');
 
       await collection.insertMany(values);
 
@@ -40,7 +35,7 @@ class ValueController {
       });
     } catch (e) {
       return res.status(400).json({
-        errors: e.message.message || 'Ocorreu um erro inesperado',
+        errors: e.message || 'Ocorreu um erro inesperado',
       });
     } finally {
       mongoDb.close();
@@ -65,7 +60,7 @@ class ValueController {
 
       const database = client.db(req.company);
 
-      if (mongoDb.existCollection(collectionName)) {
+      if (!await mongoDb.existCollection(collectionName)) {
         throw new Error('Essa predefinição não existe');
       }
 
