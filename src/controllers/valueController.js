@@ -1,17 +1,8 @@
 import { ObjectId } from 'mongodb';
-import Permission from '../models/PermissionsModel';
-
 import MongoDb from '../database/mongoDb';
 
 class ValueController {
   async store(req, res) {
-    const existPermission = await Permission.checksPermission(req.userId, 'insert');
-
-    if (!existPermission) {
-      return res.status(400).json({
-        errors: 'Este usuario não possui a permissao necessaria',
-      });
-    }
     const { collectionName, values } = req.body;
 
     if (!collectionName || !values) {
@@ -79,14 +70,6 @@ class ValueController {
   }
 
   async delete(req, res) {
-    const existPermission = await Permission.checksPermission(req.userId, 'edit');
-
-    if (!existPermission) {
-      return res.status(400).json({
-        errors: 'Este usuario não possui a permissao necessaria',
-      });
-    }
-
     const { id, collectionName } = req.params;
 
     if (!collectionName || !id) {
@@ -118,14 +101,6 @@ class ValueController {
   }
 
   async update(req, res) {
-    const existPermission = await Permission.checksPermission(req.userId, 'edit');
-
-    if (!existPermission) {
-      return res.status(400).json({
-        errors: 'Este usuario não possui a permissao necessaria',
-      });
-    }
-
     const { id } = req.params;
     const { collectionName, values } = req.body;
 

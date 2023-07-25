@@ -1,5 +1,3 @@
-import Permission from '../models/PermissionsModel';
-
 import MongoDb from '../database/mongoDb';
 
 class FieldController {
@@ -56,14 +54,6 @@ class FieldController {
   }
 
   async store(req, res) {
-    const existPermission = await Permission.checksPermission(req.userId, 'insert');
-
-    if (!existPermission) {
-      return res.status(400).json({
-        errors: 'Este usuario não possui a permissao necessaria',
-      });
-    }
-
     const { collectionName, fieldName, options } = req.body;
 
     if (!collectionName || !options || !fieldName) {
@@ -152,14 +142,6 @@ class FieldController {
   }
 
   async delete(req, res) {
-    const existPermission = await Permission.checksPermission(req.userId, 'delet');
-
-    if (!existPermission) {
-      return res.status(400).json({
-        errors: 'Este usuario não possui a permissao necessaria',
-      });
-    }
-
     const { collectionName, fieldName } = req.params;
 
     if (!fieldName || !collectionName) {
@@ -181,6 +163,8 @@ class FieldController {
       if (required.includes(fieldName)) required.splice(required.indexOf(fieldName), 1);
 
       let { properties } = rules.validator.$jsonSchema;
+      if (!properties[fieldName]) throw new Error(`O campo ${fieldName} não existe`);
+
       delete properties[fieldName];
 
       const validator = {
@@ -208,14 +192,6 @@ class FieldController {
   }
 
   async update(req, res) {
-    const existPermission = await Permission.checksPermission(req.userId, 'edit');
-
-    if (!existPermission) {
-      return res.status(400).json({
-        errors: 'Este usuario não possui a permissao necessaria',
-      });
-    }
-
     const {
       collectionName, fieldName, newFieldName, fieldRequired, newValues,
     } = req.body;

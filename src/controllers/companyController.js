@@ -1,3 +1,4 @@
+/* eslint-disable camelcase */
 import Company from '../models/CompanysModel';
 import User from '../models/UserModels';
 
@@ -24,11 +25,11 @@ class CompanyController {
         });
       }
 
-      name = name.toLowerCase()
+      name = name.toLowerCase();
 
       const companyCreate = await Company.create({ name, company_user_id });
 
-      return res.status(200).json({companyCreate});
+      return res.status(200).json({ companyCreate });
     } catch (e) {
       return res.status(400).json({
         errors: 'Ocorreu um erro inesperado',
@@ -53,13 +54,13 @@ class CompanyController {
     }
   }
 
-  async update(req, res){
-      return true
+  async update(req, res) {
+    return true;
   }
 
-  async delete(req, res){
-    return true
-}
+  async delete(req, res) {
+    return true;
+  }
 }
 
 export default new CompanyController();

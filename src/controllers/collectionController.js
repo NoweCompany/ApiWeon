@@ -1,16 +1,11 @@
 import dotenv from 'dotenv';
 import MongoDb from '../database/mongoDb';
-import Permission from '../models/PermissionsModel';
 
 dotenv.config();
 
 class TableController {
   // table
   async store(req, res) {
-    const existPermission = await Permission.checksPermission(req.userId, 'insert');
-
-    if (!existPermission) throw new Error('Este usuario não possui a permissao necessarias');
-
     const mongoDb = new MongoDb(req.company);
     const client = await mongoDb.connect();
 
@@ -90,13 +85,6 @@ class TableController {
   }
 
   async delete(req, res) {
-    const existPermission = await Permission.checksPermission(req.userId, 'delet');
-
-    if (!existPermission) {
-      return res.status(400).json({
-        errors: 'Este usuario não possui a permissao necessaria',
-      });
-    }
     const { collectionName } = req.body;
 
     if (!collectionName) {
@@ -131,13 +119,6 @@ class TableController {
   }
 
   async update(req, res) {
-    const existPermission = await Permission.checksPermission(req.userId, 'edit');
-
-    if (!existPermission) {
-      return res.status(400).json({
-        errors: 'Este usuario não possui a permissao necessaria',
-      });
-    }
     const { collectionName, newName } = req.body;
 
     if (!collectionName || !newName) {

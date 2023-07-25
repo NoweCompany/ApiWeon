@@ -1,9 +1,6 @@
 import { Router } from 'express';
-import multer from 'multer';
 
 import loginRequire from '../middlewares/loginRequire';
-import multerConfig from '../config/multerConfig';
-import createSheet from '../middlewares/createSheet';
 import downloadController from '../controllers/downloadController';
 
 const routes = new Router();

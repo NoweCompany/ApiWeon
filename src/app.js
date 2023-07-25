@@ -5,10 +5,9 @@ import configCors from './middlewares/configCors';
 
 import usersRoutes from './routes/usersRouter';
 import tokenRoutes from './routes/tokenRouter';
-import tableRoutes from './routes/tableRouter';
+import tableRoutes from './routes/collectionRouter';
 import fieldRoutes from './routes/fieldRouter';
 import valueRoutes from './routes/valueRouter';
-import templateRouter from './routes/templateRouter';
 import downloadRouter from './routes/downloadRouter';
 
 dotenv.config();
@@ -28,7 +27,6 @@ class App {
   }
 
   routes() {
-    this.app.use('/template', templateRouter);
     this.app.use('/users', usersRoutes);
     this.app.use('/token', tokenRoutes);
     this.app.use('/collection', tableRoutes);
