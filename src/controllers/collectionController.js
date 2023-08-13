@@ -24,7 +24,23 @@ class TableController {
         });
       }
 
-      await database.createCollection(collectionName);
+      await database.createCollection(collectionName, {
+        validator: {
+          $jsonSchema: {
+            bsonType: 'object',
+            title: `${collectionName} rule`,
+            required: ['default'],
+            properties: {
+              default: {
+                bsonType: 'int',
+                description: 'Campo padrão',
+              },
+            },
+          },
+        },
+        validationLevel: 'strict',
+        validationAction: 'error',
+      });
 
       return res.status(200).json({
         success: 'Predefinição criada com sucesso',
@@ -51,6 +67,7 @@ class TableController {
       const collections = (await database.listCollections().toArray()).map((cl) => cl.name);
 
       for (const collectionName of collections) {
+        if (collectionName === 'default') continue;
         const collection = database.collection(collectionName);
 
         const rule = await collection.options();
@@ -60,8 +77,10 @@ class TableController {
           const { properties } = rule.validator.$jsonSchema;
 
           fields = (Object.entries(properties)).reduce((accumulator, field) => {
+            console.log(field[0]);
+            if (field[0] === 'default') return accumulator;
             const objFields = {};
-            [objFields.key] = field;
+            [objFields.key] = field;// desestruturação
             objFields.type = field[1].bsonType;
             accumulator.push(objFields);
             return accumulator;
@@ -99,7 +118,7 @@ class TableController {
     try {
       await mongoDb.existDb(req.company);
 
-      if (!await mongoDb.existCollection(collectionName)) {
+      if (!await mongoDb.existCollection(collectionName) || collectionName === 'default') {
         throw new Error('Essa collection não existe');
       }
 

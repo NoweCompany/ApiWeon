@@ -5,7 +5,7 @@ class ValueController {
   async store(req, res) {
     const { collectionName, values } = req.body;
 
-    if (!collectionName || !values) {
+    if (!collectionName || !values || values.length <= 0) {
       return res.status(400).json({
         errors: 'Valores inválidos',
       });
@@ -18,6 +18,13 @@ class ValueController {
 
       const database = client.db(req.company);
       const collection = database.collection(collectionName);
+
+      for (const value of values) {
+        value.default = 0;
+        if (Object.keys(value).length <= 0) {
+          throw new Error('Valores inválidos');
+        }
+      }
 
       await collection.insertMany(values);
 
@@ -58,8 +65,12 @@ class ValueController {
       const collection = database.collection(collectionName);
 
       const values = await collection.find({}).limit(Number(limit)).toArray();
+      const removeFieldDefault = values.map((value) => {
+        const { default: defaultValue, ...rest } = value;
+        return rest;
+      });
 
-      return res.status(200).json(values);
+      return res.status(200).json(removeFieldDefault);
     } catch (e) {
       return res.status(400).json({
         errors: e.message || 'Ocorreu um erro inesperado',
@@ -119,6 +130,10 @@ class ValueController {
       if (!await mongoDb.existValue(id, collectionName)) {
         throw new Error(`O registro com o ID '${id}' não existe na tabela '${collectionName}`);
       }
+
+      Object.keys(values).forEach((field) => {
+        if (field === 'default') throw new Error('Esse campo não exite');
+      });
 
       await collection.updateOne(
         { _id: new ObjectId(id) },

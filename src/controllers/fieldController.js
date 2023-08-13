@@ -33,6 +33,7 @@ class FieldController {
       const { required } = rule.validator.$jsonSchema;
 
       fields = (Object.entries(properties)).reduce((accumulator, field) => {
+        if (field[0] === 'default') return accumulator;
         const objFields = {};
         [objFields.key] = field;
         objFields.type = field[1].bsonType;
@@ -69,18 +70,23 @@ class FieldController {
       await mongoDb.existDb(req.company);
       const database = client.db(req.company);
 
+      if (!await mongoDb.existCollection(collectionName)) {
+        throw new Error('Essa predefinição não existe');
+      }
+
       let rule;
       const rules = await database.collection(collectionName).options();
 
       if (!rules.validator) {
+        console.log(rules);
         let properties = {
           [fieldName]: {
             bsonType: options.type,
             description: options.description,
           },
         };
-        let required = options.required ? [fieldName] : [];
 
+        let required = options.required ? [fieldName] : [];
         rule = {
           validator: {
             $jsonSchema: {
@@ -150,6 +156,12 @@ class FieldController {
       });
     }
 
+    if (fieldName === 'default') {
+      return res.status(400).json({
+        errors: 'Esse campo não exite',
+      });
+    }
+
     const mongoDb = new MongoDb(req.company);
     const client = await mongoDb.connect();
 
@@ -199,6 +211,12 @@ class FieldController {
     if (!collectionName || !fieldName || !newValues) {
       return res.status(400).json({
         errors: 'Valores inválidos',
+      });
+    }
+
+    if (fieldName === 'default') {
+      return res.status(400).json({
+        errors: 'Esse campo não exite',
       });
     }
 
