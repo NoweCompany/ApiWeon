@@ -81,8 +81,7 @@ class TableController {
           const { properties } = rule.validator.$jsonSchema;
 
           fields = (Object.entries(properties)).reduce((accumulator, field) => {
-            console.log(field[0]);
-            if (field[0] === 'default') return accumulator;
+            if (field[0] === 'default' || field[0] === 'active') return accumulator;
             const objFields = {};
             [objFields.key] = field;// desestruturação
             objFields.type = field[1].bsonType;
