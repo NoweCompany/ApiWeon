@@ -33,7 +33,7 @@ class FieldController {
       const { required } = rule.validator.$jsonSchema;
 
       fields = (Object.entries(properties)).reduce((accumulator, field) => {
-        if (field[0] === 'default') return accumulator;
+        if (field[0] === 'default' || field[0] === 'active') return accumulator;
         const objFields = {};
         [objFields.key] = field;
         objFields.type = field[1].bsonType;
