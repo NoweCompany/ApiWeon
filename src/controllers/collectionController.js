@@ -29,11 +29,15 @@ class TableController {
           $jsonSchema: {
             bsonType: 'object',
             title: `${collectionName} rule`,
-            required: ['default'],
+            required: ['default', 'active'],
             properties: {
               default: {
                 bsonType: 'int',
                 description: 'Campo padrão',
+              },
+              active: {
+                bsonType: 'bool',
+                description: 'Campo para verificar o estado do documento',
               },
             },
           },

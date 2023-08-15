@@ -8,6 +8,7 @@ import tokenRoutes from './routes/tokenRouter';
 import tableRoutes from './routes/collectionRouter';
 import fieldRoutes from './routes/fieldRouter';
 import valueRoutes from './routes/valueRouter';
+import trashRouter from './routes/trashRouter';
 import downloadRouter from './routes/downloadRouter';
 
 dotenv.config();
@@ -32,6 +33,7 @@ class App {
     this.app.use('/collection', tableRoutes);
     this.app.use('/field', fieldRoutes);
     this.app.use('/value', valueRoutes);
+    this.app.use('/trash', trashRouter);
     this.app.use('/download', downloadRouter);
   }
 }

@@ -21,6 +21,7 @@ class ValueController {
 
       for (const value of values) {
         value.default = 0;
+        value.active = true;
         if (Object.keys(value).length <= 0) {
           throw new Error('Valores inválidos');
         }
@@ -64,13 +65,13 @@ class ValueController {
 
       const collection = database.collection(collectionName);
 
-      const values = await collection.find({}).limit(Number(limit)).toArray();
-      const removeFieldDefault = values.map((value) => {
-        const { default: defaultValue, ...rest } = value;
+      const values = await collection.find({ active: true }).limit(Number(limit)).toArray();
+      const removeFiels = values.map((value) => {
+        const { default: defaultValue, active, ...rest } = value;
         return rest;
       });
 
-      return res.status(200).json(removeFieldDefault);
+      return res.status(200).json(removeFiels);
     } catch (e) {
       return res.status(400).json({
         errors: e.message || 'Ocorreu um erro inesperado',
@@ -82,6 +83,7 @@ class ValueController {
 
   async delete(req, res) {
     const { id, collectionName } = req.params;
+    const permanent = req.params.permanent === 'true';
 
     if (!collectionName || !id) {
       return res.status(400).json({
@@ -95,14 +97,20 @@ class ValueController {
     try {
       const collection = client.db(req.company).collection(collectionName);
 
-      if (!await mongoDb.existValue(id, collectionName)) {
-        throw new Error(`O registro com o ID '${id}' não existe na tabela '${collectionName}`);
+      const existValue = await collection.findOne({ _id: new ObjectId(id) });
+      if (!existValue || !existValue.active) {
+        throw new Error(`O registro com o ID '${id}' não está ativo na predefinição '${collectionName}`);
       }
 
-      await collection.deleteOne({ _id: new ObjectId(id) });
-
+      if (permanent) {
+        await collection.deleteOne({ _id: new ObjectId(id) });
+        return res.json({
+          success: 'Deletado com sucesso.',
+        });
+      }
+      await collection.updateOne({ _id: new ObjectId(id) }, { $set: { active: false } });
       return res.json({
-        success: 'Deletado com sucesso',
+        success: 'Movido para lixeira.',
       });
     } catch (e) {
       return res.status(400).json({
