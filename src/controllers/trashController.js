@@ -15,19 +15,20 @@ class TrashController {
 
       const collections = await database.listCollections().toArray();
 
-      const valuesOnTrash = await collections.reduce(async (ac, collection) => {
+      const valuesOnTrash = await collections.reduce(async (acPromise, collection) => {
+        const ac = await acPromise;
         const values = await database.collection(collection.name).find({ active: false }).limit(Number(limit)).toArray();
 
         const removeFieldDefault = values.map((value) => {
-          if (!value.active) return;
+          if (value.active) return;
           const { default: defaultValue, active, ...rest } = value;
           return rest;
         });
 
         const exitObj = { collectionName: collection.name, values: removeFieldDefault };
-
+        ac.push(exitObj);
         return ac;
-      }, []);
+      }, Promise.resolve([]));
 
       return res.status(200).json(valuesOnTrash);
     } catch (e) {
