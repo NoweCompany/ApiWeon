@@ -96,7 +96,7 @@ class FieldController {
               properties,
             },
           },
-          validationLevel: 'strict',
+          validationLevel: 'moderate',
           validationAction: 'error',
         };
       } else {
@@ -123,7 +123,7 @@ class FieldController {
               properties,
             },
           },
-          validationLevel: 'strict',
+          validationLevel: 'moderate',
           validationAction: 'error',
         };
       }

@@ -42,7 +42,7 @@ class TableController {
             },
           },
         },
-        validationLevel: 'strict',
+        validationLevel: 'moderate',
         validationAction: 'error',
       });
 
