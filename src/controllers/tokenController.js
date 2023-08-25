@@ -1,5 +1,6 @@
 import jwt from 'jsonwebtoken';
 import User from '../models/UserModels';
+import Company from '../models/CompanysModel';
 
 class TokenController {
   async store(req, res) {
@@ -24,12 +25,18 @@ class TokenController {
           errors: ['Senha inválida'],
         });
       }
-      const { id } = user;
+      const { id, nome } = user;
       const token = jwt.sign({ id, email }, process.env.TOKEN_SECRET, {
         expiresIn: process.env.TOKEN_EXPIRATION,
       });
 
-      return res.json({ token, user: { nome: user.nome, id, email } });
+      const userCompany = await Company.findOne({ where: { company_user_id: id } });
+      return res.json({
+        token,
+        user: {
+          nome, id, email, idCompany: userCompany.id, nameCompany: userCompany.name,
+        },
+      });
     } catch (e) {
       return res.status(400).json({
         errors: 'Ocorreu um erro inesperado',
