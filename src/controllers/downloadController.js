@@ -53,7 +53,7 @@ class DownloadController {
       return res.status(200).json({
         filePath,
         fileName,
-        url: `http://localhost:3300/${fileName}`,
+        url: `https://apiweon.nowecompany.com.br/${fileName}`,
       });
     } catch (e) {
       return res.status(400).json({
