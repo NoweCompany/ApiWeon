@@ -31,7 +31,7 @@ class DownloadController {
       }
 
       const { collectionName } = req.params;
-      const collectionExist = await mongoDb.collectionExist(collectionName);
+      const collectionExist = await mongoDb.existCollection(collectionName);
 
       if (!collectionName || !collectionExist) {
         return res.status(400).json({
@@ -42,7 +42,6 @@ class DownloadController {
       const database = client.db(req.company);
       const collection = database.collection(collectionName);
       const values = await collection.find({}).toArray();
-      const valuesJson = JSON.stringify(values);
 
       const xls = json2xls(values);
 
@@ -51,9 +50,12 @@ class DownloadController {
 
       fs.writeFileSync(filePath, xls, 'binary');
 
-      return res.status(200).json(xls);
+      return res.status(200).json({
+        filePath,
+        fileName,
+        url: `http://localhost:3300/${fileName}`,
+      });
     } catch (e) {
-      console.log(e);
       return res.status(400).json({
         errors: 'Ocorreu um erro inesperado',
       });

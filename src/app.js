@@ -1,6 +1,8 @@
 import dotenv from 'dotenv';
 import express from 'express';
 import helmet from 'helmet';
+import path from 'path';
+
 import configCors from './middlewares/configCors';
 
 import usersRoutes from './routes/usersRouter';
@@ -23,6 +25,7 @@ class App {
   middlewares() {
     this.app.use(helmet());
     this.app.use(configCors);
+    this.app.use(express.static(path.resolve(__dirname, '..', 'uploads')));
     this.app.use(express.urlencoded({ extended: true }));
     this.app.use(express.json());
   }
