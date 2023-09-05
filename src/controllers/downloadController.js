@@ -9,7 +9,7 @@ import Permission from '../models/PermissionsModel';
 dotenv.config();
 
 class DownloadController {
-  async store(req, res) {
+  async store(req, res, next) {
     const existPermission = await Permission.checksPermission(req.userId, 'insert');
 
     if (!existPermission) {
@@ -41,7 +41,8 @@ class DownloadController {
 
       const database = client.db(req.company);
       const collection = database.collection(collectionName);
-      const values = await collection.find({}).toArray();
+      const projection = { _id: false, default: false, active: false };
+      const values = await collection.find({}).project(projection).toArray();
 
       const xls = json2xls(values);
 
@@ -50,11 +51,14 @@ class DownloadController {
 
       fs.writeFileSync(filePath, xls, 'binary');
 
-      return res.status(200).json({
+      res.status(200).json({
         filePath,
         fileName,
         url: `https://apiweon.nowecompany.com.br/${fileName}`,
       });
+
+      req.filePath = filePath;
+      next();
     } catch (e) {
       return res.status(400).json({
         errors: 'Ocorreu um erro inesperado',
