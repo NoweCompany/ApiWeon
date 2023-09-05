@@ -10,6 +10,8 @@ export default async (req, res, next) => {
 
     next();
   } catch (error) {
-    next();
+    return res.status(400).json({
+      errors: 'Ocorreu um erro inesperado',
+    });
   }
 };

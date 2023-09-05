@@ -4,20 +4,11 @@ import fs from 'fs';
 import json2xls from 'json2xls';
 import path from 'path';
 import MongoDb from '../database/mongoDb';
-import Permission from '../models/PermissionsModel';
 
 dotenv.config();
 
 class DownloadController {
   async store(req, res, next) {
-    const existPermission = await Permission.checksPermission(req.userId, 'insert');
-
-    if (!existPermission) {
-      return res.status(400).json({
-        errors: 'Este usuario não possui a permissao necessaria',
-      });
-    }
-
     const mongoDb = new MongoDb(req.company);
     const client = await mongoDb.connect();
 
