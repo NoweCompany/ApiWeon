@@ -79,12 +79,14 @@ class TableController {
 
         if (Object.keys(rule).length > 0) {
           const { properties } = rule.validator.$jsonSchema;
+          const { required } = rule.validator.$jsonSchema;
 
           fields = (Object.entries(properties)).reduce((accumulator, field) => {
             if (field[0] === 'default' || field[0] === 'active') return accumulator;
             const objFields = {};
             [objFields.key] = field;// desestruturação
             objFields.type = field[1].bsonType;
+            objFields.required = !!(required.includes(field[0]));
             accumulator.push(objFields);
             return accumulator;
           }, []);
