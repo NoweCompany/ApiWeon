@@ -1,6 +1,7 @@
 import jwt from 'jsonwebtoken';
 import User from '../models/UserModels';
 import Company from '../models/CompanysModel';
+import Permission from '../models/PermissionsModel';
 
 class TokenController {
   async store(req, res) {
@@ -31,11 +32,16 @@ class TokenController {
       });
 
       const userCompany = await Company.findOne({ where: { company_user_id: id } });
+      const companyUser = await Company.findOne({ where: { company_user_id: id } });
+      const permissionData = await Permission.findOne({ where: { user_id: id } });
+
       return res.json({
         token,
         user: {
           nome, id, email, idCompany: userCompany.id, nameCompany: userCompany.name,
         },
+        companyUser,
+        permissionData,
       });
     } catch (e) {
       return res.status(400).json({
@@ -52,16 +58,22 @@ class TokenController {
       const { id, email } = dados;
 
       const user = await User.findOne({ where: id, email });
-
+      const { createdAt, updatedAt } = user;
       if (!user) {
         return res.status(401).json({
           errors: ['Usuário inválido'],
         });
       }
 
+      const companyUser = await Company.findOne({ where: { company_user_id: id } });
+      const permissionData = await Permission.findOne({ where: { user_id: id } });
       return res.status(200).json({
         id,
         email,
+        createdAt,
+        updatedAt,
+        companyUser,
+        permissionData,
       });
     } catch (e) {
       return res.status(400).json({
