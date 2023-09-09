@@ -246,6 +246,7 @@ class FieldController {
       delete properties[fieldName];
       properties[newFieldName || fieldName] = { bsonType: newValues.type, description: newValues.description };
 
+      console.log(required);
       const validator = {
         $jsonSchema: {
           bsonType: 'object',
