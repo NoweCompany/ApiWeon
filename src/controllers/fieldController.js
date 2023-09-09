@@ -229,9 +229,14 @@ class FieldController {
       const collection = database.collection(collectionName);
 
       let { required } = (await collection.options()).validator.$jsonSchema;
-      if (fieldRequired) {
-        const indice = required.indexOf(fieldName);
-        required.splice(indice, 1, newFieldName || fieldName);
+      const indice = required.indexOf(fieldName);
+      if (!fieldRequired && indice !== -1) {
+        required.splice(indice, 1);
+      } else if (fieldRequired && indice === -1) {
+        required.push(newFieldName);
+      } else if (indice !== -1 && fieldName !== newFieldName) {
+        required.splice(indice, 1);
+        required.push(newFieldName);
       }
 
       let { properties } = (await collection.options()).validator.$jsonSchema;
@@ -241,6 +246,7 @@ class FieldController {
       delete properties[fieldName];
       properties[newFieldName || fieldName] = { bsonType: newValues.type, description: newValues.description };
 
+      console.log(required);
       const validator = {
         $jsonSchema: {
           bsonType: 'object',
