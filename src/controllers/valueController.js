@@ -10,7 +10,6 @@ class ValueController {
         errors: 'Valores inválidos',
       });
     }
-
     const mongoDb = new MongoDb(req.company);
     const client = await mongoDb.connect();
     try {
@@ -26,7 +25,7 @@ class ValueController {
           throw new Error('Valores inválidos');
         }
       }
-
+      console.log(values);
       await collection.insertMany(values);
 
       return res.status(200).json({

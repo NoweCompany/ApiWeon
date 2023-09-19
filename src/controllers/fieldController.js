@@ -78,7 +78,6 @@ class FieldController {
       const rules = await database.collection(collectionName).options();
 
       if (!rules.validator) {
-        console.log(rules);
         let properties = {
           [fieldName]: {
             bsonType: options.type,

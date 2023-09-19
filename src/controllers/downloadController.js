@@ -34,7 +34,7 @@ class DownloadController {
       const collection = database.collection(collectionName);
       const projection = { _id: false, default: false, active: false };
       const values = await collection.find({}).project(projection).toArray();
-
+      console.log(values);
       const xls = json2xls(values);
 
       const fileName = `${req.company}_${collectionName}.xlsx`;

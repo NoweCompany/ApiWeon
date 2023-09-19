@@ -12,6 +12,7 @@ import fieldRoutes from './routes/fieldRouter';
 import valueRoutes from './routes/valueRouter';
 import trashRouter from './routes/trashRouter';
 import downloadRouter from './routes/downloadRouter';
+import dashboardRouter from './routes/dashboardRouter';
 
 dotenv.config();
 
@@ -38,6 +39,7 @@ class App {
     this.app.use('/value', valueRoutes);
     this.app.use('/trash', trashRouter);
     this.app.use('/download', downloadRouter);
+    this.app.use('/dashboard', dashboardRouter);
   }
 }
 
