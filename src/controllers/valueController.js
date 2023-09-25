@@ -42,7 +42,7 @@ class ValueController {
 
   async index(req, res) {
     const { collectionName } = req.params;
-    const limit = req.params.limit || 100;
+    const limit = req.params.limit || Infinity;
 
     if (!collectionName) {
       return res.status(400).json({
