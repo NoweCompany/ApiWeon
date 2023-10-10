@@ -25,7 +25,6 @@ class ValueController {
           throw new Error('Valores inválidos');
         }
       }
-      console.log(values);
       await collection.insertMany(values);
 
       return res.status(200).json({
