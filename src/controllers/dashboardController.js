@@ -53,6 +53,34 @@ class DashboardController {
     }
   }
 
+  async show(req, res) {
+    const mongoDb = new MongoDb(req.company);
+    const client = await mongoDb.connect();
+    try {
+      const dataBase = client.db(req.company);
+
+      const { dashboardName } = req.params;
+      if (!dashboardName) {
+        throw new Error('Envie os valores corretos');
+      }
+      const nameFormater = formaterNameDashboard(dashboardName);
+      const exitCollectionDashboard = await mongoDb.existCollection(nameFormater);
+      if (!exitCollectionDashboard) {
+        throw new Error(`O dashboard ${dashboardName} não existe`);
+      }
+
+      const dashboards = await dataBase.collection(nameFormater).find().toArray();
+
+      return res.status(200).json(dashboards);
+    } catch (e) {
+      return res.status(400).json({
+        errors: e.message || 'Ocorreu um erro inesperado',
+      });
+    } finally {
+      mongoDb.close();
+    }
+  }
+
   async index(req, res) {
     const mongoDb = new MongoDb(req.company);
     const client = await mongoDb.connect();
