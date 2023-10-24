@@ -46,7 +46,7 @@ class TableController {
         validationAction: 'error',
       });
 
-      await req?.historic?.registerChange(client);
+      await req.historic.registerChange(client);
 
       return res.status(200).json({
         success: 'Predefinição criada com sucesso',
@@ -96,8 +96,7 @@ class TableController {
         const obj = { collectionName, fields };
         response.push(obj);
       }
-
-      await req?.historic?.registerChange(connection);
+      await req.historic.registerChange(connection);
 
       if (response.length <= 0) return res.status(200).json({ msg: 'Não há tabelas criadas' });
 
@@ -132,7 +131,7 @@ class TableController {
 
       const database = client.db(req.company);
       await database.dropCollection(collectionName);
-      await req?.historic?.registerChange(client);
+      await req.historic.registerChange(client);
 
       return res.status(200).json({
         success: 'Sua predefinição foi excluida com sucesso',
@@ -169,7 +168,7 @@ class TableController {
       const collection = database.collection(collectionName);
 
       await collection.rename(newName);
-      await req?.historic?.registerChange(client);
+      await req.historic.registerChange(client);
 
       return res.status(200).json({
         success: 'Tabela renomeada com sucesso',

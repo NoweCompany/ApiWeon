@@ -15,6 +15,7 @@ import downloadRouter from './routes/downloadRouter';
 import chartsRouter from './routes/chartsRouter';
 import kpiRouter from './routes/kpiRouter';
 import dashboardRouter from './routes/dashboardRouter';
+import historicRouter from './routes/historicRouter';
 
 dotenv.config();
 
@@ -44,6 +45,7 @@ class App {
     this.app.use('/dashboard', dashboardRouter);
     this.app.use('/chart', chartsRouter);
     this.app.use('/kpi', kpiRouter);
+    this.app.use('/historic', historicRouter);
   }
 }
 
