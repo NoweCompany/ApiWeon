@@ -42,7 +42,7 @@ class DashboardController {
       };
 
       await client.db(req.company).createCollection(nameFormater, validationSchema);
-
+      await req.historic.registerChange(client);
       return res.status(200).json(true);
     } catch (e) {
       return res.status(400).json({
@@ -70,6 +70,7 @@ class DashboardController {
       }
 
       const dashboards = await dataBase.collection(nameFormater).find().toArray();
+      await req.historic.registerChange(client);
 
       return res.status(200).json(dashboards);
     } catch (e) {
@@ -99,6 +100,7 @@ class DashboardController {
         responseData.push(data);
       }
 
+      await req.historic.registerChange(client);
       return res.status(200).json(responseData);
     } catch (e) {
       return res.status(400).json({

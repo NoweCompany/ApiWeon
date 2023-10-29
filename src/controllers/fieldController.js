@@ -44,6 +44,8 @@ class FieldController {
 
       const response = { collectionName, fields };
 
+      await req.historic.registerChange(client);
+
       return res.status(200).json(response);
     } catch (e) {
       return res.status(400).json({
@@ -133,6 +135,7 @@ class FieldController {
       };
 
       await database.command(command);
+      await req.historic.registerChange(client);
 
       return res.status(200).json({
         success: 'Campo criado com sucesso',
@@ -191,6 +194,7 @@ class FieldController {
       };
 
       await database.command(command);
+      await req.historic.registerChange(client);
 
       return res.status(200).json({
         success: 'Campo deletado com sucesso',
@@ -245,7 +249,6 @@ class FieldController {
       delete properties[fieldName];
       properties[newFieldName || fieldName] = { bsonType: newValues.type, description: newValues.description };
 
-      console.log(required);
       const validator = {
         $jsonSchema: {
           bsonType: 'object',
@@ -261,6 +264,7 @@ class FieldController {
       };
 
       await database.command(command);
+      await req.historic.registerChange(client);
 
       return res.json({
         success: 'Campo alterado com sucesso',

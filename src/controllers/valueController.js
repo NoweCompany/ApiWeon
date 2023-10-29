@@ -26,6 +26,7 @@ class ValueController {
         }
       }
       await collection.insertMany(values);
+      await req.historic.registerChange(client);
 
       return res.status(200).json({
         success: 'Cadastro bem sucedido',
@@ -69,6 +70,7 @@ class ValueController {
         return rest;
       });
 
+      await req.historic.registerChange(client);
       return res.status(200).json(removeFiels);
     } catch (e) {
       return res.status(400).json({
@@ -107,6 +109,8 @@ class ValueController {
         });
       }
       await collection.updateOne({ _id: new ObjectId(id) }, { $set: { active: false } });
+      await req.historic.registerChange(client);
+
       return res.json({
         success: 'Movido para lixeira.',
       });
@@ -145,6 +149,8 @@ class ValueController {
         { _id: new ObjectId(id) },
         { $set: values },
       );
+
+      await req.historic.registerChange(client);
 
       return res.json({
         success: 'alterado com sucesso',

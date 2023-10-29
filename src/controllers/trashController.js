@@ -30,6 +30,7 @@ class TrashController {
         return ac;
       }, Promise.resolve([]));
 
+      await req.historic.registerChange(client);
       return res.status(200).json(valuesOnTrash);
     } catch (e) {
       return res.status(400).json({
@@ -70,6 +71,7 @@ class TrashController {
         return rest;
       });
 
+      await req.historic.registerChange(client);
       return res.status(200).json(removeFieldDefault);
     } catch (e) {
       return res.status(400).json({
@@ -104,6 +106,7 @@ class TrashController {
         { $set: { active: true } },
       );
 
+      await req.historic.registerChange(client);
       return res.json({
         success: 'Restaurado com sucesso!',
       });

@@ -73,6 +73,7 @@ class DashboardController {
       };
       await dataBase.collection(collectionNameFormated).insertOne(dataInsert);
 
+      await req.historic.registerChange(client);
       return res.status(200).json(true);
     } catch (e) {
       return res.status(400).json({

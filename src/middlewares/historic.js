@@ -85,7 +85,7 @@ export default function historic(req, res, next) {
           });
         }
 
-        const route = (req.originalUrl).split('/').join('');
+        const route = (req.originalUrl).split('/')[1];
         const description = `User with e-mail ${userEmail}, performed an action in route "${route}" with the method "${method}"`;
         await database.collection('historic').insertOne({
           default: 0,
