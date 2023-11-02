@@ -1,5 +1,6 @@
 import { ObjectId } from 'mongodb';
 import MongoDb from '../database/mongoDb';
+import whiteList from '../config/whiteList';
 
 class TrashController {
   async index(req, res) {
@@ -12,12 +13,17 @@ class TrashController {
       await mongoDb.existDb(req.company);
 
       const database = client.db(req.company);
-
-      const collections = await database.listCollections().toArray();
+      const collections = (await database.listCollections().toArray()).reduce((ac, vl) => {
+        if (vl.name.includes('dashboard_') || whiteList.collections.includes(vl.name)) {
+          return ac;
+        }
+        ac.push(vl);
+        return ac;
+      }, []);
 
       const valuesOnTrash = await collections.reduce(async (acPromise, collection) => {
         const ac = await acPromise;
-        const values = await database.collection(collection.name).find({ active: false }).limit(Number(limit)).toArray();
+        const values = (await database.collection(collection.name).find({ active: false }).limit(Number(limit)).toArray());
 
         const removeFieldDefault = values.map((value) => {
           if (value.active) return;

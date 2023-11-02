@@ -1,5 +1,6 @@
 import dotenv from 'dotenv';
 import MongoDb from '../database/mongoDb';
+import whiteList from '../config/whiteList';
 
 dotenv.config();
 
@@ -68,11 +69,15 @@ class TableController {
 
       const response = [];
       const database = connection.db(mongoDb.database);
-
-      const collections = (await database.listCollections().toArray()).map((cl) => cl.name);
+      const collections = (await database.listCollections().toArray()).reduce((ac, vl) => {
+        if (vl.name.includes('dashboard_') || whiteList.colections.includes(vl.name)) {
+          return ac;
+        }
+        ac.push(vl.name);
+        return ac;
+      }, []);
 
       for (const collectionName of collections) {
-        if (collectionName === 'default') continue;
         const collection = database.collection(collectionName);
 
         const rule = await collection.options();
