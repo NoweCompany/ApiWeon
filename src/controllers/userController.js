@@ -8,7 +8,7 @@ class UserController {
     const t = await sequelize.transaction();
     try {
       const {
-        email, password, company, permission,
+        email, password, permission,
       } = req.body;
       const {
         adm,
@@ -17,7 +17,7 @@ class UserController {
         delet,
       } = permission;
 
-      if (!email || !password || !company || !adm || !insert || !edit || !delet) {
+      if (!email || !password) {
         return res.status(400).json({
           errors: 'Valores inválidos',
         });
@@ -29,7 +29,7 @@ class UserController {
           errors: 'Um usuário com esse email já existe',
         });
       }
-      const companyFormated = String(company).trim().toLowerCase();
+      const companyFormated = String(req.company).trim().toLowerCase();
       const newUser = await User.create({ email, password }, { transaction: t });
       const { id: userId } = newUser;
 

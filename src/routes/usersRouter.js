@@ -9,7 +9,7 @@ import loginRequire from '../middlewares/loginRequire';
 const routes = new Router();
 
 routes.get('/', loginRequire, userController.index);
-routes.post('/', userController.store);
+routes.post('/', loginRequire, userController.store);
 routes.put('/', loginRequire, userController.update);
 routes.delete('/:id', userController.delete);
 
