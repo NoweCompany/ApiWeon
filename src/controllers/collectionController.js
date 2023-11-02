@@ -70,7 +70,7 @@ class TableController {
       const response = [];
       const database = connection.db(mongoDb.database);
       const collections = (await database.listCollections().toArray()).reduce((ac, vl) => {
-        if (vl.name.includes('dashboard_') || whiteList.colections.includes(vl.name)) {
+        if (vl.name.includes('dashboard_') || whiteList.collections.includes(vl.name)) {
           return ac;
         }
         ac.push(vl.name);

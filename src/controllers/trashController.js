@@ -31,8 +31,10 @@ class TrashController {
           return rest;
         });
 
-        const exitObj = { collectionName: collection.name, values: removeFieldDefault };
-        ac.push(exitObj);
+        if (removeFieldDefault.length >= 1) {
+          const exitObj = { collectionName: collection.name, values: removeFieldDefault };
+          ac.push(exitObj);
+        }
         return ac;
       }, Promise.resolve([]));
 
