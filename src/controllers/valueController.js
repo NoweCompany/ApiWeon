@@ -98,7 +98,7 @@ class ValueController {
       const collection = client.db(req.company).collection(collectionName);
 
       const existValue = await collection.findOne({ _id: new ObjectId(id) });
-      if (!existValue || !existValue.active) {
+      if (!existValue || (!existValue.active && !permanent)) {
         throw new Error(`O registro com o ID '${id}' não está ativo na predefinição '${collectionName}`);
       }
 
