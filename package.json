@@ -26,6 +26,7 @@
     "sequelize": "^6.30.0",
     "sequelize-cli": "^6.6.1",
     "sucrase": "^3.31.0",
+    "xlsx": "https://cdn.sheetjs.com/xlsx-0.20.0/xlsx-0.20.0.tgz",
     "xlsx-populate": "^1.21.0"
   },
   "devDependencies": {

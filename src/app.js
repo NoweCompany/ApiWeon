@@ -12,6 +12,7 @@ import fieldRoutes from './routes/fieldRouter';
 import valueRoutes from './routes/valueRouter';
 import trashRouter from './routes/trashRouter';
 import downloadRouter from './routes/downloadRouter';
+import uploadRouter from './routes/uploadRouter';
 import chartsRouter from './routes/chartsRouter';
 import kpiRouter from './routes/kpiRouter';
 import dashboardRouter from './routes/dashboardRouter';
@@ -42,6 +43,7 @@ class App {
     this.app.use('/value', valueRoutes);
     this.app.use('/trash', trashRouter);
     this.app.use('/download', downloadRouter);
+    this.app.use('/upload', uploadRouter);
     this.app.use('/dashboard', dashboardRouter);
     this.app.use('/chart', chartsRouter);
     this.app.use('/kpi', kpiRouter);
