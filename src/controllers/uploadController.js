@@ -1,24 +1,106 @@
-// import xlsx from 'xlsx';
+import xlsx from 'xlsx';
+import busboy from 'busboy';
+import MongoDb from '../database/mongoDb';
 
+async function insertValuesCollection(collectionName, company, values) {
+  const mongoDb = new MongoDb(company);
+  const client = await mongoDb.connect();
+
+  if (!await mongoDb.existDb(company)) throw new Error('O banco de dados que está tentando acessar não existe');
+  if (!await mongoDb.existCollection(collectionName)) throw new Error(`O collectionName: ${collectionName}, não existe`);
+
+  const database = client.db(company);
+  const collection = database.collection(collectionName);
+
+  for (const value of values) {
+    if (Object.keys(value).length <= 0) {
+      throw new Error('Valores inválidos');
+    }
+    value.default = 0;
+    value.active = true;
+  }
+
+  try {
+    await collection.insertMany(values);
+  } catch (error) {
+    throw new Error('Arquivo inválido, o arquivo deve seguir as validações da predefinição. Para isso baixe a planilha de exemplo.');
+  }
+  mongoDb.close();
+  return true;
+}
 class UploadController {
   async store(req, res) {
-    const { collectionNamem, fileExtName } = req.params;
-    console.log(req.files);
-    const sheetClient = req.files.file;
-
-    if (!collectionNamem || !fileExtName || !sheetClient) {
-      return res.status(400).json({
-        error: 'Valores passados por parametro inválidos',
-      });
-    }
-
     try {
-      console.log(sheetClient);
-      res.status(200).json({
-        success: 'Upload bem sucedido',
+      let collectionName = '';
+      let mimeType = '';
+      const bb = busboy({ headers: req.headers });
+
+      bb.on('error', (error) => {
+        res.status(400).json({
+          errors: error,
+        });
       });
+
+      bb.on('field', (name, value) => {
+        if (!name || !value || name !== 'collectionName') {
+          bb.destroy('Parâmetros inválido!');
+          return;
+        }
+        collectionName = value.trim();
+      });
+
+      bb.on('file', (fieldName, file, info) => {
+        mimeType = info.mimeType;
+        const allowedFileTypes = ['application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', 'application/json'];
+        if (!allowedFileTypes.includes(mimeType)) {
+          return res.status(400).json({
+            errors: 'Tipo de arquivo não suportado. Envie um arquivo xlsx ou json.',
+          });
+        }
+
+        const chunks = [];
+
+        file.on('data', (chunk) => {
+          chunks.push(chunk);
+        });
+
+        file.on('end', async () => {
+          if (!collectionName) {
+            bb.destroy('CollectionName não foi enviado');
+          }
+          if (bb.destroyed) {
+            return;
+          }
+
+          const buffer = Buffer.concat(chunks);
+          try {
+            if (mimeType === 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet') {
+              const workbook = xlsx.read(buffer, { type: 'buffer' });
+              const sheetDataJson = xlsx.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]]);
+              await insertValuesCollection(collectionName, req.company, sheetDataJson);
+            } else if (mimeType === 'application/json') {
+              const jsonData = JSON.parse(buffer.toString());
+              await insertValuesCollection(collectionName, req.company, jsonData);
+            }
+
+            return res.status(200).json({
+              message: 'Arquivo recebido e processado com sucesso!',
+            });
+          } catch (error) {
+            res.status(400).json({
+              errors: error.message,
+            });
+          }
+        });
+      });
+
+      bb.on('close', () => {
+        console.log('Done parsing form!');
+      });
+
+      req.pipe(bb);
     } catch (error) {
-      return res.status(400).json({
+      return res.status(500).json({
         error: 'Ocorreu um erro inesperado',
       });
     }

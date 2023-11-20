@@ -8,6 +8,6 @@ import permission from '../middlewares/permission';
 
 const routes = new Router();
 
-routes.post('/: /:fileExtName', loginRequire, permission('insert'), historic, uploadController.store);
+routes.post('/', loginRequire, permission('insert'), historic, uploadController.store);
 
 export default routes;
