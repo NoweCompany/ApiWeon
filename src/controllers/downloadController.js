@@ -34,7 +34,7 @@ class DownloadController {
       const database = client.db(req.company);
       const collection = database.collection(collectionName);
       const projection = { _id: false, default: false, active: false };
-      const values = await collection.find({}).jection).toArray();
+      const values = await collection.find({}).project(projection).toArray();
 
       const fileName = `${req.company}_${collectionName}_${Date.now()}.xlsx`;
       const filePath = path.resolve(__dirname, '..', '..', 'uploads', fileName);
