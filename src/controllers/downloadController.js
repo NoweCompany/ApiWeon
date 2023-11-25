@@ -34,14 +34,14 @@ class DownloadController {
       const database = client.db(req.company);
       const collection = database.collection(collectionName);
       const projection = { _id: false, default: false, active: false };
-      const values = await collection.find({}).project(projection).toArray();
+      const values = await collection.find({}).jection).toArray();
 
-      const fileName = `${req.company}_${collectionName}.xlsx`;
+      const fileName = `${req.company}_${collectionName}_${Date.now()}.xlsx`;
       const filePath = path.resolve(__dirname, '..', '..', 'uploads', fileName);
 
       const ws = xlsx.utils.json_to_sheet(values);
       const wb = xlsx.utils.book_new();
-      xlsx.utils.book_append_sheet(wb, ws, `${fileName}`);
+      xlsx.utils.book_append_sheet(wb, ws, `${req.company}_${collectionName}`);
 
       xlsx.writeFile(wb, filePath, { compression: true });
 
@@ -102,7 +102,7 @@ class DownloadController {
       const ws = xlsx.utils.json_to_sheet([]);
       xlsx.utils.sheet_add_aoa(ws, [fields], { origin: 'A1' });
 
-      const fileName = `${req.company}_${collectionName}.xlsx`;
+      const fileName = `${req.company}_${collectionName}_${Date.now()}.xlsx`;
       const filePath = path.resolve(__dirname, '..', '..', 'uploads', fileName);
 
       xlsx.utils.book_append_sheet(wb, ws, `${req.company}_${collectionName}`);
