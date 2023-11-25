@@ -4,14 +4,15 @@ import userController from '../controllers/userController';
 import permissionsController from '../controllers/permissionsController';
 import companyController from '../controllers/companyController';
 
+import permission from '../middlewares/permission';
 import loginRequire from '../middlewares/loginRequire';
 
 const routes = new Router();
 
 routes.get('/', loginRequire, userController.index);
-routes.post('/', loginRequire, userController.store);
-routes.put('/', loginRequire, userController.update);
-routes.delete('/:id', userController.delete);
+routes.post('/', loginRequire, permission('insert'), userController.store);
+routes.put('/', loginRequire, permission('edit'), userController.update);
+routes.delete('/:id', loginRequire, permission('adm'), userController.delete);
 
 // rotas de permissões
 // routes.get('/permission', permissionsController.index);

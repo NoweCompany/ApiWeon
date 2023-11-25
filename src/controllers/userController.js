@@ -18,6 +18,7 @@ class UserController {
       } = permission;
 
       if (!email || !password) {
+        await t.commit();
         return res.status(400).json({
           errors: 'Valores inválidos',
         });
@@ -25,6 +26,7 @@ class UserController {
 
       const emailExist = !!(await User.findOne({ where: { email } }));
       if (emailExist) {
+        await t.commit();
         return res.status(400).json({
           errors: 'Um usuário com esse email já existe',
         });
@@ -143,10 +145,24 @@ class UserController {
         });
       }
 
+      const company = await Company.findOne({ where: { company_user_id: user.id } });
+
+      if (!company) {
+        return res.status(400).json({
+          errors: 'Compania de seu usuário não existe ou é inválida!',
+        });
+      }
+
+      if (company.name !== req.company) {
+        return res.status(400).json({
+          errors: 'Você só pode excluir usuários que pertencem a mesma empresa que você!',
+        });
+      }
+
       await user.destroy();
       return res.json(null);
     } catch (e) {
-      return res.status(400).json({
+      return res.status(500).json({
         errors: 'Ocorreu um erro inesperado',
       });
     }

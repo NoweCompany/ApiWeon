@@ -5,7 +5,7 @@ export default (permissionRequired) => async (req, res, next) => {
 
   if (!existPermission) {
     return res.status(400).json({
-      errors: 'Este usuario não possui a permissao necessaria',
+      errors: `Este usuário não possui a permissão de ${permissionRequired}, necessária para realizar essa operação.`,
     });
   }
 

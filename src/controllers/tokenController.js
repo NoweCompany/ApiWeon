@@ -35,6 +35,11 @@ class TokenController {
       const companyUser = await Company.findOne({ where: { company_user_id: id } });
       const permissionData = await Permission.findOne({ where: { user_id: id } });
 
+      if (!companyUser) {
+        return res.status(401).json({
+          errors: 'Usuário não está associado a uma compania.',
+        });
+      }
       return res.json({
         token,
         user: {
