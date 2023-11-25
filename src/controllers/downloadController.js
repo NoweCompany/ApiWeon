@@ -1,7 +1,6 @@
 // Em teste inda
 import dotenv from 'dotenv';
-import fs from 'fs';
-import json2xls from 'json2xls';
+import xlsx from 'xlsx';
 import path from 'path';
 import MongoDb from '../database/mongoDb';
 
@@ -34,12 +33,15 @@ class DownloadController {
       const collection = database.collection(collectionName);
       const projection = { _id: false, default: false, active: false };
       const values = await collection.find({}).project(projection).toArray();
-      const xls = json2xls(values);
 
       const fileName = `${req.company}_${collectionName}.xlsx`;
       const filePath = path.resolve(__dirname, '..', '..', 'uploads', fileName);
 
-      fs.writeFileSync(filePath, xls, 'binary');
+      const ws = xlsx.utils.json_to_sheet(values);
+      const wb = xlsx.utils.book_new();
+      xlsx.utils.book_append_sheet(wb, ws, `${fileName}`);
+
+      xlsx.writeFile(wb, filePath, { compression: true });
 
       res.status(200).json({
         filePath,
