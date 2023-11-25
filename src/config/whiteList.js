@@ -3,4 +3,9 @@ export default {
     'default',
     'historic',
   ],
+  fields: [
+    '_id',
+    'active',
+    'default',
+  ],
 };

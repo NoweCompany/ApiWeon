@@ -10,5 +10,6 @@ import permission from '../middlewares/permission';
 const routes = new Router();
 
 routes.post('/:collectionName', loginRequire, permission('insert'), historic, downloadController.store, removeFilePath);
+routes.get('/:collectionName', loginRequire, permission('insert'), historic, downloadController.index, removeFilePath);
 
 export default routes;
