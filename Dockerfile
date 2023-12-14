@@ -11,7 +11,6 @@ COPY . .
 
 EXPOSE 3300
 
-#RUN npm run build
-#RUN npx sequelize db:migrate
+RUN npm run build
 
-CMD [ "npm", "run", "dev" ]
+CMD [ "npm", "start" ]

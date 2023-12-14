@@ -6,10 +6,12 @@ services:
     hostname: contMysql
     restart: always
     environment:
-      - MYSQL_ROOT_PASSWORD=senhaForte
-      - MYSQL_DATABASE=nowe
+      - "MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}"
+      - "MYSQL_DATABASE=${MYSQL_DATABASE}"
+    env_file:
+      - .env
     ports:
-      - 3307:3306
+      - "${DB_MYSQL_PORT}:3306"
     networks:
       - mynetwork
 
@@ -19,8 +21,10 @@ services:
     volumes:
       - .:/home/api
     ports:
-      - 3300:3300
-    command: npm run dev
+      - "${API_PORT}:3300"
+    env_file:
+      - .env
+    command: npm start
     depends_on:
       - mysqldb
     restart: always
