@@ -12,6 +12,8 @@ services:
       - .env
     ports:
       - "${DB_MYSQL_PORT}:3306"
+    volumes:
+      - MYSQL_VOLUME:/home/volume/var/lib/mysql
     networks:
       - mynetwork
 
@@ -19,7 +21,7 @@ services:
     build: ./
     container_name: apiweon
     volumes:
-      - .:/home/api
+      - APIWEON_VOLUME:/home/volume
     ports:
       - "${API_PORT}:3300"
     env_file:
@@ -30,6 +32,10 @@ services:
     restart: always
     networks:
       - mynetwork
+
+volumes:
+  MYSQL_VOLUME:
+  APIWEON_VOLUME:
 
 networks:
   mynetwork:
