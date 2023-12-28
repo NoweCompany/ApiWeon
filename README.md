@@ -1,4 +1,4 @@
-![Nowe Company Bannwe](https://github.com/NoweCompany/Nowe/blob/main/assets/img/slogan.jpg)
+![Nowe Company Banne](https://github.com/NoweCompany/Weon/blob/hmlg/assets/img/the%20future%20is%20nowe%20banner.png)
 # ApiWeon
 
 This api was developed with the intention of providing services to our Front-End CLIENT, see below the instructions for initialization
