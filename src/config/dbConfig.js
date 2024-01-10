@@ -11,7 +11,7 @@ module.exports = {
     timestamps: true,
     underscored: true,
   },
-  logging: (...msg) => console.log(msg),
+  // logging: (...msg) => console.log(msg),
   pool: {
     max: 20,
     min: 0,

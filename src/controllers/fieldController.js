@@ -194,12 +194,19 @@ class FieldController {
       };
 
       await database.command(command);
+
+      // Update all documents, to removing yours properties
+      await collection.updateMany({}, { $unset: { [fieldName]: '' } });
+      // Delet all objects that have fewer than three keys
+      await collection.deleteMany({ $expr: { $lt: [{ $size: { $objectToArray: '$$ROOT' } }, 4] } });
+
       await req.historic.registerChange(client);
 
       return res.status(200).json({
         success: 'Campo deletado com sucesso',
       });
     } catch (e) {
+      console.log(e);
       return res.status(400).json({
         errors: e.message || 'Ocorreu um erro inesperado',
       });
