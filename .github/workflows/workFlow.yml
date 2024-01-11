@@ -35,7 +35,7 @@ jobs:
         port: ${{ vars.PORT }}
         key: ${{ secrets.SERVER_SSH_KEY }}
         script: |
-          cd /home/hmlg.apiweon.nowecompany.com.br/public_html
+          cd /home/hmlg.apiweon.nowecompany.com.br/public_html_hmlg
           git pull origin main
           npm run build
           docker-compose up -d
