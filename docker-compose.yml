@@ -1,25 +1,8 @@
 version: '3'
 services:
-  # mysqldb:
-  #   image: mysql
-  #   container_name: mysqldb
-  #   hostname: contMysql
-  #   restart: always
-  #   environment:
-  #     - "MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}"
-  #     - "MYSQL_DATABASE=${MYSQL_DATABASE}"
-  #   env_file:
-  #     - .env
-  #   ports:
-  #     - "${DB_MYSQL_PORT}:3306"
-  #   volumes:
-  #     - MYSQL_VOLUME:/home/volume/var/lib/mysql
-  #   networks:
-  #     - mynetwork
-
   apiweon:
     build: ./
-    container_name: apiweon
+    container_name: "${DOCKER_CONTAINER_NAME}"
     volumes:
       - ./dist:/home/api/dist
     ports:
@@ -32,10 +15,6 @@ services:
     restart: always
     networks:
       - mynetwork
-
-# volumes:
-#   #MYSQL_VOLUME:
-#   APIWEON_VOLUME:
 
 networks:
   mynetwork:
