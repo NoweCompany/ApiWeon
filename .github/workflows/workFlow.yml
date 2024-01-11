@@ -1,0 +1,60 @@
+name: apiWeon.nowecompany.hostinger
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+  workflow_dispatch:
+jobs:
+  build:
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Build
+        run: npm run build
+
+  deploy-homologation:
+    runs-on: ubuntu-22.04
+    environment:
+      name: homologation
+    needs: build
+    steps:
+    - name: Repo Checkout
+      uses: actions/checkout@v4
+    - name: Hotinger Deployment
+      uses: appleboy/ssh-action@v1.0.1
+      with:
+        host: ${{ vars.HOST }}
+        username: ${{ vars.USERNAME }}
+        password: ${{ secrets.PASSWORD }}
+        port: ${{ vars.PORT }}
+        key: ${{ secrets.SERVER_SSH_KEY }}
+        script: |
+          cd /home/hmlg.apiweon.nowecompany.com.br/public_html
+          git pull origin main
+          npm run build
+          docker-compose up -d
+          docker-compose restart
+
+  deploy-Production:
+    runs-on: ubuntu-22.04
+    environment:
+      name: production
+    needs: deploy-homologation
+    steps:
+    - name: Repo Checkout
+      uses: actions/checkout@v4
+    - name: Hotinger Deployment
+      uses: appleboy/ssh-action@v1.0.1
+      with:
+        host: ${{ vars.HOST }}
+        username: ${{ vars.USERNAME }}
+        password: ${{ secrets.PASSWORD }}
+        port: ${{ vars.PORT }}
+        key: ${{ secrets.SERVER_SSH_KEY }}
+        script: |
+          cd /home/apiweon.nowecompany.com.br/public_html
+          git pull origin main
+          npm run build
+          docker-compose up -d
+          docker-compose restart

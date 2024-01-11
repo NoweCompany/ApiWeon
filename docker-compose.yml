@@ -1,41 +1,41 @@
 version: '3'
 services:
-  mysqldb:
-    image: mysql
-    container_name: mysqldb
-    hostname: contMysql
-    restart: always
-    environment:
-      - "MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}"
-      - "MYSQL_DATABASE=${MYSQL_DATABASE}"
-    env_file:
-      - .env
-    ports:
-      - "${DB_MYSQL_PORT}:3306"
-    volumes:
-      - MYSQL_VOLUME:/home/volume/var/lib/mysql
-    networks:
-      - mynetwork
+  # mysqldb:
+  #   image: mysql
+  #   container_name: mysqldb
+  #   hostname: contMysql
+  #   restart: always
+  #   environment:
+  #     - "MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}"
+  #     - "MYSQL_DATABASE=${MYSQL_DATABASE}"
+  #   env_file:
+  #     - .env
+  #   ports:
+  #     - "${DB_MYSQL_PORT}:3306"
+  #   volumes:
+  #     - MYSQL_VOLUME:/home/volume/var/lib/mysql
+  #   networks:
+  #     - mynetwork
 
   apiweon:
     build: ./
     container_name: apiweon
     volumes:
-      - APIWEON_VOLUME:/home/volume
+      - ./dist:/home/api/dist
     ports:
       - "${API_PORT}:3300"
     env_file:
       - .env
     command: npm start
-    depends_on:
-      - mysqldb
+    #depends_on:
+      #- mysqldb
     restart: always
     networks:
       - mynetwork
 
-volumes:
-  MYSQL_VOLUME:
-  APIWEON_VOLUME:
+# volumes:
+#   #MYSQL_VOLUME:
+#   APIWEON_VOLUME:
 
 networks:
   mynetwork:
