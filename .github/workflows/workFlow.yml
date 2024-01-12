@@ -37,8 +37,8 @@ jobs:
         script: |
           cd /home/hmlg.apiweon.nowecompany.com.br/public_html_hmlg
           git pull origin main
-          npm i
-          npm run build
+          /root/.nvm/versions/node/v18.18.2/bin/npm i
+          /root/.nvm/versions/node/v18.18.2/bin/npm run build
           docker-compose restart
 
   deploy-Production:
@@ -60,6 +60,6 @@ jobs:
         script: |
           cd /home/apiweon.nowecompany.com.br/public_html
           git pull origin main
-          npm i
-          npm run build
+          /root/.nvm/versions/node/v18.18.2/bin/npm i
+          /root/.nvm/versions/node/v18.18.2/bin/npm run build
           docker-compose restart
