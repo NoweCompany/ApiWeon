@@ -38,7 +38,7 @@ class ValueController {
           if (!typeOfkeyValue) throw new Error('Valores inválidos');
           switch (typeOfkeyValue) {
             case 'long':
-              if (BigInt(valueOfDocument) > Number.MAX_SAFE_INTEGER) throw new Error(`Valores inválidos, o número enviado ultrapassa o valor máximo de ${Number.MAX_SAFE_INTEGER} caracteres`);
+              if (String(valueOfDocument).length > 15) throw new Error('Valores inválidos, o número enviado ultrapassa o valor máximo de 15 caracteres');
               value[keyOfDocument] = Long.fromBigInt(BigInt(req.body.values[i][keyOfDocument]));
               break;
             case 'date':
