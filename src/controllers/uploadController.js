@@ -16,14 +16,41 @@ async function insertValuesCollection(collectionName, company, values) {
   const collection = database.collection(collectionName);
 
   const rules = await collection.options();
-  const { properties } = rules.validator.$jsonSchema;
+  const { properties, required } = rules.validator.$jsonSchema;
 
   for (const value of values) {
     if (Object.keys(value).length <= 0) {
-      throw new Error('Valores inválidos');
+      throw new Error('Valores inválidos, Objeto vazio');
     }
     value.default = 0;
     value.active = true;
+
+    Object.keys(properties).forEach((key) => {
+      const ValueOfProperty = properties[key];
+      if (!Object.prototype.hasOwnProperty.call(value, key) && !required.includes(key)) {
+        switch (ValueOfProperty.bsonType) {
+          case 'long':
+            value[key] = new Long(null);
+            break;
+          case 'date':
+            value[key] = new Date(null);
+            break;
+          case 'double':
+            value[key] = new Double(null);
+            break;
+          case 'int':
+            value[key] = new Int32(null);
+            break;
+          case 'bool':
+            value[key] = false;
+            break;
+          default:
+            value[key] = '';
+        }
+      }
+    });
+
+    console.log(value);
 
     for (const entriesOfValue of Object.entries(value)) {
       const keyOfDocument = entriesOfValue[0];
@@ -31,7 +58,6 @@ async function insertValuesCollection(collectionName, company, values) {
       const typeOfkeyValue = properties[keyOfDocument]?.bsonType;
 
       if (!typeOfkeyValue) throw new Error('Valores inválidos');
-      console.log(valueOfDocument);
       switch (typeOfkeyValue) {
         case 'long':
           if (String(valueOfDocument).length > 15) throw new Error('Valores inválidos, o número enviado ultrapassa o valor máximo de 15 caracteres');
@@ -46,12 +72,14 @@ async function insertValuesCollection(collectionName, company, values) {
         case 'int':
           value[keyOfDocument] = new Int32(valueOfDocument);
           break;
+        case 'bool':
+          value[keyOfDocument] = !!valueOfDocument;
+          break;
         default:
           value[keyOfDocument] = valueOfDocument;
       }
     }
   }
-
   try {
     await collection.insertMany(values);
   } catch (error) {

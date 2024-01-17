@@ -21,8 +21,9 @@ class ValueController {
       const collection = database.collection(collectionName);
 
       const rules = await collection.options();
-      const { properties } = rules.validator.$jsonSchema;
+      const { properties, required } = rules.validator.$jsonSchema;
 
+      // This "for" passes through each value in the array
       for (let i = 0; i < values.length; i += 1) {
         const value = values[i];
         value.default = 0;
@@ -30,6 +31,32 @@ class ValueController {
         if (Object.keys(value).length <= 0) {
           throw new Error('Valores inválidos');
         }
+        // verify if each values has a appropriate key
+        Object.keys(properties).forEach((key) => {
+          const ValueOfProperty = properties[key];
+          if (!Object.prototype.hasOwnProperty.call(value, key) && !required.includes(key)) {
+            switch (ValueOfProperty.bsonType) {
+              case 'long':
+                value[key] = new Long(null);
+                break;
+              case 'date':
+                value[key] = new Date(null);
+                break;
+              case 'double':
+                value[key] = new Double(null);
+                break;
+              case 'int':
+                value[key] = new Int32(null);
+                break;
+              case 'bool':
+                value[key] = false;
+                break;
+              default:
+                value[key] = '';
+            }
+          }
+        });
+
         for (const entriesOfValue of Object.entries(value)) {
           const keyOfDocument = entriesOfValue[0];
           const valueOfDocument = entriesOfValue[1];
@@ -181,6 +208,34 @@ class ValueController {
       Object.keys(values).forEach((field) => {
         if (field === 'default') throw new Error('Esse campo não exite');
       });
+
+      const rules = await collection.options();
+      const { properties } = rules.validator.$jsonSchema;
+
+      for (const entriesOfValue of Object.entries(values)) {
+        const keyOfDocument = entriesOfValue[0];
+        const valueOfDocument = entriesOfValue[1];
+        const typeOfkeyValue = properties[keyOfDocument]?.bsonType;
+
+        if (!typeOfkeyValue) throw new Error('Valores inválidos');
+        switch (typeOfkeyValue) {
+          case 'long':
+            if (String(valueOfDocument).length > 15) throw new Error('Valores inválidos, o número enviado ultrapassa o valor máximo de 15 caracteres');
+            values[keyOfDocument] = Long.fromBigInt(BigInt(valueOfDocument));
+            break;
+          case 'date':
+            values[keyOfDocument] = new Date(valueOfDocument);
+            break;
+          case 'double':
+            values[keyOfDocument] = new Double(valueOfDocument);
+            break;
+          case 'int':
+            values[keyOfDocument] = new Int32(valueOfDocument);
+            break;
+          default:
+            values[keyOfDocument] = valueOfDocument;
+        }
+      }
 
       await collection.updateOne(
         { _id: new ObjectId(id) },
