@@ -1,5 +1,5 @@
 import MongoDb from '../database/mongoDb';
-import defaultValue from '../services/defaultValueForBsonType';
+import convertTypeToBsonType from '../services/convertTypeToBsonType';
 
 class FieldController {
   async index(req, res) {
@@ -138,7 +138,7 @@ class FieldController {
       await database.command(command);
       await req.historic.registerChange(client);
 
-      const valueDafaultForNewField = defaultValue(options.type);
+      const valueDafaultForNewField = convertTypeToBsonType(options.type, null);
 
       // Add new key em old documents
       await database.collection(collectionName).updateMany(

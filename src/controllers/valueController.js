@@ -1,7 +1,8 @@
 import {
-  ObjectId, Long, Double, Int32,
+  ObjectId, Long,
 } from 'mongodb';
 import MongoDb from '../database/mongoDb';
+import convertTypeToBsonType from '../services/convertTypeToBsonType';
 
 class ValueController {
   async store(req, res) {
@@ -26,34 +27,16 @@ class ValueController {
       // This "for" passes through each value in the array
       for (let i = 0; i < values.length; i += 1) {
         const value = values[i];
+        if (Object.keys(value).length <= 0) {
+          throw new Error('Valores inválidos, todos objetos devem pelo menos ter uma chave válida de acordo com as regras de validação!');
+        }
         value.default = 0;
         value.active = true;
-        if (Object.keys(value).length <= 0) {
-          throw new Error('Valores inválidos');
-        }
         // verify if each values has a appropriate key
         Object.keys(properties).forEach((key) => {
           const ValueOfProperty = properties[key];
           if (!Object.prototype.hasOwnProperty.call(value, key) && !required.includes(key)) {
-            switch (ValueOfProperty.bsonType) {
-              case 'long':
-                value[key] = new Long(null);
-                break;
-              case 'date':
-                value[key] = new Date(0);
-                break;
-              case 'double':
-                value[key] = new Double(null);
-                break;
-              case 'int':
-                value[key] = new Int32(null);
-                break;
-              case 'bool':
-                value[key] = false;
-                break;
-              default:
-                value[key] = '';
-            }
+            value[key] = convertTypeToBsonType(ValueOfProperty.bsonType, null);
           }
         });
         // Tranform type of each field validation
@@ -65,23 +48,7 @@ class ValueController {
           if (!keyOfDocument) throw new Error(`Chave do documento enviado não é valida!${value}`);
           if (!typeOfkeyValue) throw new Error('Tipo da chave de validação inválidas!');
 
-          switch (typeOfkeyValue) {
-            case 'long':
-              if (String(valueOfDocument).length > 15) throw new Error('Valores inválidos, o número enviado ultrapassa o valor máximo de 15 caracteres');
-              value[keyOfDocument] = Long.fromBigInt(BigInt(req.body.values[i][keyOfDocument]));
-              break;
-            case 'date':
-              value[keyOfDocument] = new Date(valueOfDocument);
-              break;
-            case 'double':
-              value[keyOfDocument] = new Double(valueOfDocument);
-              break;
-            case 'int':
-              value[keyOfDocument] = new Int32(valueOfDocument);
-              break;
-            default:
-              value[keyOfDocument] = valueOfDocument;
-          }
+          value[keyOfDocument] = convertTypeToBsonType(typeOfkeyValue, valueOfDocument);
         }
       }
       await collection.insertMany(values);
@@ -207,12 +174,10 @@ class ValueController {
         throw new Error(`O registro com o ID '${id}' não existe na tabela '${collectionName}`);
       }
 
-      Object.keys(values).forEach((field) => {
-        if (field === 'default') throw new Error('Esse campo não exite');
-      });
-
       const rules = await collection.options();
       const { properties } = rules.validator.$jsonSchema;
+
+      if (Object.keys(values).length <= 0) throw new Error('Valores inválidos, o objeto values deve pelo menos ter uma chave válida de acordo com as regras de validação!');
 
       for (const entriesOfValue of Object.entries(values)) {
         const keyOfDocument = entriesOfValue[0];
@@ -220,23 +185,8 @@ class ValueController {
         const typeOfkeyValue = properties[keyOfDocument]?.bsonType;
 
         if (!typeOfkeyValue) throw new Error('Valores inválidos');
-        switch (typeOfkeyValue) {
-          case 'long':
-            if (String(valueOfDocument).length > 15) throw new Error('Valores inválidos, o número enviado ultrapassa o valor máximo de 15 caracteres');
-            values[keyOfDocument] = Long.fromBigInt(BigInt(valueOfDocument));
-            break;
-          case 'date':
-            values[keyOfDocument] = new Date(valueOfDocument);
-            break;
-          case 'double':
-            values[keyOfDocument] = new Double(valueOfDocument);
-            break;
-          case 'int':
-            values[keyOfDocument] = new Int32(valueOfDocument);
-            break;
-          default:
-            values[keyOfDocument] = valueOfDocument;
-        }
+        values[keyOfDocument] = convertTypeToBsonType(typeOfkeyValue, valueOfDocument);
+        if (values[keyOfDocument] === null) throw new Error('Valores inválidos, o número enviado ultrapassa o valor máximo de 15 caracteres');
       }
 
       await collection.updateOne(
