@@ -1,4 +1,5 @@
 import MongoDb from '../database/mongoDb';
+import defaultValue from '../services/defaultValueForBsonType';
 
 class FieldController {
   async index(req, res) {
@@ -136,6 +137,14 @@ class FieldController {
 
       await database.command(command);
       await req.historic.registerChange(client);
+
+      const valueDafaultForNewField = defaultValue(options.type);
+
+      // Add new key em old documents
+      await database.collection(collectionName).updateMany(
+        { [fieldName]: { $exists: false } },
+        { $set: { [fieldName]: valueDafaultForNewField } },
+      );
 
       return res.status(200).json({
         success: 'Campo criado com sucesso',
