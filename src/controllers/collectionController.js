@@ -103,7 +103,7 @@ class TableController {
       }
       await req.historic.registerChange(connection);
 
-      if (response.length <= 0) return res.status(200).json({ msg: 'Não há tabelas criadas' });
+      if (response.length <= 0) return res.status(200).json('Não há tabelas criadas');
 
       return res.status(200).json({ response });
     } catch (e) {

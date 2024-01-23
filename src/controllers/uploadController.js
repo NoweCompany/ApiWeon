@@ -1,5 +1,8 @@
 import xlsx from 'xlsx';
 import busboy from 'busboy';
+import {
+  Long, Double, Int32,
+} from 'mongodb';
 import MongoDb from '../database/mongoDb';
 
 async function insertValuesCollection(collectionName, company, values) {
@@ -12,14 +15,71 @@ async function insertValuesCollection(collectionName, company, values) {
   const database = client.db(company);
   const collection = database.collection(collectionName);
 
+  const rules = await collection.options();
+  const { properties, required } = rules.validator.$jsonSchema;
+
   for (const value of values) {
     if (Object.keys(value).length <= 0) {
-      throw new Error('Valores inválidos');
+      throw new Error('Valores inválidos, Objeto vazio');
     }
     value.default = 0;
     value.active = true;
-  }
 
+    Object.keys(properties).forEach((key) => {
+      const ValueOfProperty = properties[key];
+      if (!Object.prototype.hasOwnProperty.call(value, key) && !required.includes(key)) {
+        switch (ValueOfProperty.bsonType) {
+          case 'long':
+            value[key] = new Long(null);
+            break;
+          case 'date':
+            value[key] = new Date(null);
+            break;
+          case 'double':
+            value[key] = new Double(null);
+            break;
+          case 'int':
+            value[key] = new Int32(null);
+            break;
+          case 'bool':
+            value[key] = false;
+            break;
+          default:
+            value[key] = '';
+        }
+      }
+    });
+
+    console.log(value);
+
+    for (const entriesOfValue of Object.entries(value)) {
+      const keyOfDocument = entriesOfValue[0];
+      const valueOfDocument = entriesOfValue[1];
+      const typeOfkeyValue = properties[keyOfDocument]?.bsonType;
+
+      if (!typeOfkeyValue) throw new Error('Valores inválidos');
+      switch (typeOfkeyValue) {
+        case 'long':
+          if (String(valueOfDocument).length > 15) throw new Error('Valores inválidos, o número enviado ultrapassa o valor máximo de 15 caracteres');
+          value[keyOfDocument] = Long.fromBigInt(BigInt(valueOfDocument));
+          break;
+        case 'date':
+          value[keyOfDocument] = new Date(valueOfDocument);
+          break;
+        case 'double':
+          value[keyOfDocument] = new Double(valueOfDocument);
+          break;
+        case 'int':
+          value[keyOfDocument] = new Int32(valueOfDocument);
+          break;
+        case 'bool':
+          value[keyOfDocument] = !!valueOfDocument;
+          break;
+        default:
+          value[keyOfDocument] = valueOfDocument;
+      }
+    }
+  }
   try {
     await collection.insertMany(values);
   } catch (error) {

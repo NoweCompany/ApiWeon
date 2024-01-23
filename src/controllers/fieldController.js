@@ -68,7 +68,6 @@ class FieldController {
 
     const mongoDb = new MongoDb(req.company);
     const client = await mongoDb.connect();
-
     try {
       await mongoDb.existDb(req.company);
       const database = client.db(req.company);
@@ -80,12 +79,24 @@ class FieldController {
       let rule;
       const rules = await database.collection(collectionName).options();
 
+      const propertieValidation = {
+        bsonType: options.type,
+        description: options.description,
+      };
+      switch (options.type) {
+        case 'long':
+          propertieValidation.maximum = 9223372036854775808;
+          propertieValidation.minimum = -9223372036854775808;
+          propertieValidation.exclusiveMinimum = true;
+          propertieValidation.exclusiveMaximum = true;
+          break;
+        default:
+          break;
+      }
+
       if (!rules.validator) {
         let properties = {
-          [fieldName]: {
-            bsonType: options.type,
-            description: options.description,
-          },
+          [fieldName]: propertieValidation,
         };
 
         let required = options.required ? [fieldName] : [];
@@ -111,10 +122,7 @@ class FieldController {
           required.push(fieldName);
         }
 
-        properties[fieldName] = {
-          bsonType: options.type,
-          description: options.description,
-        };
+        properties[fieldName] = propertieValidation;
 
         rule = {
           validator: {
@@ -129,7 +137,6 @@ class FieldController {
           validationAction: 'error',
         };
       }
-
       const command = {
         collMod: collectionName,
         validator: rule.validator,
