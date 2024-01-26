@@ -5,15 +5,22 @@ import dotenv from 'dotenv';
 dotenv.config();
 
 class Mongo {
+  #database = null;
+
   constructor(database) {
     this.database = database;
     this.connection = null;
   }
 
+  set database(databaseName) {
+    this.#database = databaseName;
+  }
+
+  get database() {
+    return this.#database;
+  }
+
   async connect() {
-    if (!this.database) {
-      return null;
-    }
     try {
       const client = new MongoClient(`${process.env.MONGO_CONNECTION_STRING}`, {
         useNewUrlParser: true,
