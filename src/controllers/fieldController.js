@@ -1,8 +1,9 @@
 import whiteList from '../config/whiteList';
 
 class FieldController {
-  constructor(fieldService) {
+  constructor(fieldService, mongoDb) {
     this.fieldService = fieldService;
+    this.mongoDb = mongoDb;
   }
 
   async index(req, res) {
@@ -16,7 +17,6 @@ class FieldController {
 
     try {
       const databaseName = req.company;
-      const client = await this.fieldService.openConnection(databaseName);
       const responseList = await this.fieldService.listPropertiesOfSchemaValidation(databaseName, collectionName);
 
       if (responseList.msg && responseList.status) {
@@ -27,7 +27,7 @@ class FieldController {
 
       const response = { collectionName, fields: responseList };
 
-      await req.historic.registerChange(client);
+      await req.historic.registerChange(this.mongoDb.connection);
 
       return res.status(200).json(response);
     } catch (e) {
@@ -36,7 +36,7 @@ class FieldController {
         errors: e.message || 'Ocorreu um erro inesperado',
       });
     } finally {
-      this.fieldService.closeConnection();
+      this.mongoDb.close();
     }
   }
 
@@ -51,21 +51,19 @@ class FieldController {
 
     try {
       const database = req.company;
-      const client = await this.fieldService.openConnection(database);
       const responseRegisterField = await this.fieldService.registerNewValitorRule(
         database,
         collectionName,
         fieldName,
         options,
       );
-      console.log(responseRegisterField);
       if (responseRegisterField?.msg && responseRegisterField?.status) {
         return res.status(responseRegisterField.status).json({
           errors: responseRegisterField.msg,
         });
       }
 
-      await req.historic.registerChange(client);
+      await req.historic.registerChange(this.mongoDb.connection);
 
       return res.status(200).json({
         success: 'Campo criado com sucesso',
@@ -76,7 +74,7 @@ class FieldController {
         errors: e.message || 'Ocorreu um erro inesperado',
       });
     } finally {
-      this.fieldService.closeConnection();
+      this.mongoDb.close();
     }
   }
 
@@ -116,16 +114,29 @@ class FieldController {
         errors: e.message || 'Ocorreu um erro inesperado',
       });
     } finally {
-      this.fieldService.closeConnection();
+      this.mongoDb.close();
     }
   }
 
+  /*
+    Body: {
+      collectionName: "",
+      fieldName: "",
+      originalName: ""
+      newValues: {
+        newFieldName: "",
+        type:""
+        fieldRequired: "",
+        description: ""
+      }
+    }
+  */
   async update(req, res) {
     const {
-      collectionName, fieldName, newFieldName, fieldRequired, newValues,
+      collectionName, fieldName, originalName, newValues,
     } = req.body;
 
-    if (!collectionName || !fieldName || !newValues) {
+    if (!collectionName || !fieldName || !originalName || !newValues) {
       return res.status(400).json({
         errors: 'Valores inválidos',
       });
@@ -139,8 +150,13 @@ class FieldController {
 
     try {
       const database = req.company;
-      const client = await this.fieldService.openConnection(database);
-      const reponseUpdateField = await this.fieldService.updateFieldOfvalidation(database, collectionName, fieldName, newFieldName, fieldRequired, newValues);
+      const reponseUpdateField = await this.fieldService.updateFieldOfvalidation(
+        database,
+        collectionName,
+        fieldName,
+        originalName,
+        newValues,
+      );
 
       if (reponseUpdateField?.msg && reponseUpdateField?.status) {
         return res.status(reponseUpdateField.status).json({
@@ -148,7 +164,7 @@ class FieldController {
         });
       }
 
-      await req.historic.registerChange(client);
+      await req.historic.registerChange(this.mongoDb.connection);
       return res.json({
         success: 'Campo alterado com sucesso',
       });

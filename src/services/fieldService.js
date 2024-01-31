@@ -1,57 +1,40 @@
+import { randomUUID } from 'node:crypto';
+
 class FieldService {
-  constructor(mongoDb, convertTypeToBsonType) {
+  constructor(mongoDb, convertTypeToBsonType, fieldconfigService) {
     this.mongoDb = mongoDb;
     this.convertTypeToBsonType = convertTypeToBsonType;
-    this.client = null;
+    this.fieldconfigService = fieldconfigService;
+    this.clientMongoDb = null;
   }
 
-  async closeConnection() {
+  async setClient() {
     try {
-      if (this.client) {
-        await this.client.close();
-        console.log('Conexão fechada com sucesso.');
-      }
-    } catch (err) {
-      throw new Error(`Erro ao fechar a conexão: ${err.message}`);
+      this.clientMongoDb = await this.mongoDb.connect();
+      return this.clientMongoDb;
+    } catch (error) {
+      console.log('Error ao setar client mongodb');
+      return { msg: 'Error ao setar client mongodb', status: 500 };
     }
   }
 
-  async openConnection(databaseName) {
+  async listPropertiesOfSchemaValidation(databaseName, collectionName) {
     try {
-      this.mongoDb.database = databaseName;
+      const list = await this.fieldconfigService.listFields(databaseName, collectionName);
 
-      this.client = await this.mongoDb.connect();
-      return this.client;
-    } catch (err) {
-      console.error(`Erro ao definir cliente: ${err.message}`);
-      throw new Error(`Erro ao definir cliente: ${err.message}`);
-    }
-  }
+      const formattedData = list.map((doc) => ({
+        key: doc.fieldsEspecifications.currentName,
+        type: doc.fieldsEspecifications.type,
+        require: doc.fieldsEspecifications.require,
+        allNames: doc.fieldsEspecifications.allNames,
+        currentName: doc.fieldsEspecifications.currentName,
+        originalName: doc.fieldsEspecifications.originalName,
+      }));
 
-  async listPropertiesOfSchemaValidation(database, collectionName) {
-    try {
-      const databaseRef = this.client.db(database);
-
-      if (!(await this.mongoDb.existCollection(collectionName))) {
-        return { msg: 'Essa predefinição não existe', status: 400 };
-      }
-
-      const collection = databaseRef.collection(collectionName);
-      const rule = await collection.options();
-
-      if (!rule.validator || !rule.validator.$jsonSchema) {
-        return { msg: 'Não há nenhum campo criado', status: 400 };
-      }
-
-      const { properties, required } = rule.validator.$jsonSchema;
-
-      return Object.entries(properties)
-        .filter(([key]) => key !== 'default' && key !== 'active')
-        .map(([key, value]) => ({
-          key,
-          type: value.bsonType,
-          required: required.includes(key),
-        }));
+      return {
+        collectionName,
+        fields: formattedData,
+      };
     } catch (error) {
       console.error(`Erro ao listar schema validator: ${error.message}`);
       throw new Error('Erro ao listar schema validator');
@@ -65,9 +48,9 @@ class FieldService {
     options,
   ) {
     try {
-      const databaseRef = this.client.db(database);
-
-      if (!(await this.mongoDb.existCollection(collectionName))) {
+      await this.setClient();
+      const databaseRef = this.clientMongoDb.db(database);
+      if (!(await this.mongoDb.existCollection(collectionName, database))) {
         return { msg: 'Essa predefinição não existe', status: 400 };
       }
 
@@ -79,15 +62,19 @@ class FieldService {
         description: options.description,
       };
 
+      const originalName = `${fieldName}_${randomUUID()}`;
+
       let { properties, required } = rules.validator.$jsonSchema;
 
-      if (properties[fieldName]) return { msg: 'Este campo já existe', status: 400 };
-
-      if (options.required) {
-        required.push(fieldName);
+      for (const propertie in properties) {
+        if (propertie.split('_')[0] === fieldName) return { msg: 'Este campo já existe', status: 400 };
       }
 
-      properties[fieldName] = propertieValidation;
+      if (options.required) {
+        required.push(originalName);
+      }
+
+      properties[originalName] = propertieValidation;
 
       rule = {
         validator: {
@@ -112,13 +99,22 @@ class FieldService {
 
       // Add new key in old documents
       await databaseRef.collection(collectionName).updateMany(
-        { [fieldName]: { $exists: false } },
-        { $set: { [fieldName]: valueDafaultForNewField } },
+        { [originalName]: { $exists: false } },
+        { $set: { [originalName]: valueDafaultForNewField } },
+      );
+      await this.fieldconfigService.setFieldInConfig(
+        database,
+        collectionName,
+        originalName,
+        fieldName,
+        options.type,
+        options.required,
+        options.description,
       );
 
       return null;
     } catch (error) {
-      console.error(`Erro ao registrar novo campo no schema validator: ${error.message}`);
+      console.error(`Erro ao registrar novo campo no schema validator: ${error}`);
       throw new Error('Erro ao registrar novo campo no schema validator');
     }
   }
@@ -164,11 +160,16 @@ class FieldService {
     }
   }
 
-  async updateFieldOfvalidation(database, collectionName, fieldName, newFieldName, fieldRequired, newValues) {
+  async updateFieldOfvalidation(databaseName, collectionName, fieldName, originalName, newValues) {
     try {
-      const databaseRef = this.client.db(database);
+      await this.setClient();
+      const databaseRef = this.clientMongoDb.db(databaseName);
 
-      if (!(await this.mongoDb.existCollection(collectionName))) {
+      const {
+        type, fieldRequired, description,
+      } = newValues;
+
+      if (!(await this.mongoDb.existCollection(collectionName, databaseName))) {
         return { msg: 'Essa predefinição não existe', status: 400 };
       }
 
@@ -176,21 +177,17 @@ class FieldService {
 
       let { required, properties } = (await collection.options()).validator.$jsonSchema;
 
-      const indice = required.indexOf(fieldName);
+      if (!properties?.[originalName]) return { msg: 'Esse campo não existe', status: 400 };
+
+      const indice = required.indexOf(originalName);
 
       if (!fieldRequired && indice !== -1) {
         required.splice(indice, 1);
       } else if (fieldRequired && indice === -1) {
-        required.push(newFieldName);
-      } else if (indice !== -1 && fieldName !== newFieldName) {
-        required.splice(indice, 1);
-        required.push(newFieldName);
+        required.push(originalName);
       }
 
-      if (!properties?.[fieldName]) return { msg: 'Esse campo não existe', status: 400 };
-
-      delete properties[fieldName];
-      properties[newFieldName] = { bsonType: newValues.type, description: newValues.description };
+      properties[originalName] = { bsonType: type, description };
 
       const validator = {
         $jsonSchema: {
@@ -205,6 +202,16 @@ class FieldService {
         collMod: collectionName,
         validator,
       };
+
+      const updated = await this.fieldconfigService.updateFieldInFieldsConfig(
+        databaseName,
+        collectionName,
+        fieldName,
+        originalName,
+        newValues,
+      );
+
+      if (updated.msg && updated.status) return updated;
 
       await databaseRef.command(command);
       return null;

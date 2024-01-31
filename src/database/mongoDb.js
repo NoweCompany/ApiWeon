@@ -22,6 +22,7 @@ class Mongo {
 
   async connect() {
     try {
+      if (this.connection) return this.connection;
       const client = new MongoClient(`${process.env.MONGO_CONNECTION_STRING}`, {
         useNewUrlParser: true,
         useUnifiedTopology: true,
@@ -52,18 +53,22 @@ class Mongo {
   close() {
     try {
       this.connection.close();
+      this.connection = null;
     } catch (error) {
       throw new Error('Erro ao tentar fechar a conexão');
     }
   }
 
-  async existCollection(collectionName) {
+  async existCollection(collectionName, databaseName) {
     try {
-      const database = this.connection.db(this.database);
-      const arrayCollection = await database.listCollections().toArray();
+      const database = databaseName || this.database;
+
+      const databaseRef = this.connection.db(database);
+      const arrayCollection = await databaseRef.listCollections().toArray();
 
       return arrayCollection.some((collection) => collection.name === collectionName);
     } catch (err) {
+      console.log(err);
       throw new Error('Erro ao verificar a existência da coleção');
     }
   }
