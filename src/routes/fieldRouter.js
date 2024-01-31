@@ -23,6 +23,6 @@ const fieldController = new FieldController(fieldService, mongoDb);
 routes.get('/:collectionName', loginRequire, historic, fieldController.index.bind(fieldController));
 routes.post('/', loginRequire, permission('insert'), historic, fieldController.store.bind(fieldController));
 routes.put('/', loginRequire, permission('edit'), historic, fieldController.update.bind(fieldController));
-routes.delete('/:collectionName/:fieldName', loginRequire, permission('delet'), historic, fieldController.delete.bind(fieldController));
+routes.delete('/:collectionName/:fieldName/:originalName', loginRequire, permission('delet'), historic, fieldController.delete.bind(fieldController));
 
 export default routes;

@@ -119,22 +119,24 @@ class FieldService {
     }
   }
 
-  async removeFielOfVlidation(database, collectionName, fieldName) {
+  async removeFielOfVlidation(databaseName, collectionName, fieldName, originalName) {
     try {
-      const databaseRef = this.client.db(database);
+      await this.setClient();
+      const databaseRef = this.clientMongoDb.db(databaseName);
 
-      if (!(await this.mongoDb.existCollection(collectionName))) {
+      if (!(await this.mongoDb.existCollection(collectionName, databaseName))) {
         return { msg: 'Essa predefinição não existe', status: 400 };
       }
+
       const collection = databaseRef.collection(collectionName);
       const rules = await collection.options();
 
       let { required, properties } = rules.validator.$jsonSchema;
 
-      if (required.includes(fieldName)) required.splice(required.indexOf(fieldName), 1);
-      if (!properties[fieldName]) return { msg: `O campo ${fieldName} não existe`, status: 400 };
+      if (required.includes(originalName)) required.splice(required.indexOf(originalName), 1);
+      if (!properties[originalName]) return { msg: `O campo ${fieldName} não existe`, status: 400 };
 
-      delete properties[fieldName];
+      delete properties[originalName];
 
       const validator = {
         $jsonSchema: {
@@ -148,8 +150,10 @@ class FieldService {
         validator,
       };
 
-      await databaseRef.command(command);
+      const removed = await this.fieldconfigService.removeFieldInFieldsConfig(databaseName, collectionName, fieldName, originalName);
+      if (removed.msg && removed.status) return removed;
 
+      await databaseRef.command(command);
       // Update all documents, to removing yours properties
       await collection.updateMany({}, { $unset: { [fieldName]: '' } });
       // Delet all objects that have fewer than three keys

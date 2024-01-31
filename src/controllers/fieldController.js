@@ -79,7 +79,7 @@ class FieldController {
   }
 
   async delete(req, res) {
-    const { collectionName, fieldName } = req.params;
+    const { collectionName, fieldName, originalName } = req.params;
 
     if (!fieldName || !collectionName) {
       return res.status(400).json({
@@ -94,8 +94,7 @@ class FieldController {
 
     try {
       const database = req.company;
-      const client = await this.fieldService.openConnection(database);
-      const reponseRemoveField = await this.fieldService.removeFielOfVlidation(database, collectionName, fieldName);
+      const reponseRemoveField = await this.fieldService.removeFielOfVlidation(database, collectionName, fieldName, originalName);
 
       if (reponseRemoveField?.msg && reponseRemoveField?.status) {
         return res.status(reponseRemoveField.status).json({
@@ -103,7 +102,7 @@ class FieldController {
         });
       }
 
-      await req.historic.registerChange(client);
+      await req.historic.registerChange(this.mongoDb.connection);
 
       return res.status(200).json({
         success: 'Campo deletado com sucesso',

@@ -215,6 +215,59 @@ class FieldsConfig {
       throw new Error('Erro ao atualizar campos de uma collection FieldsConfig');
     }
   }
+
+  async removeFieldInFieldsConfig(
+    databaseName,
+    collectionName,
+    fieldName,
+    originalName,
+  ) {
+    if (
+      typeof databaseName !== 'string'
+      || typeof collectionName !== 'string'
+      || typeof fieldName !== 'string'
+      || typeof originalName !== 'string'
+    ) {
+      throw new Error('Uma ou mais variáveis são inválidas');
+    }
+    try {
+      await this.setClient();
+
+      const databaseRef = this.clientMongoDb.db(databaseName);
+
+      const existCollection = await this.mongoDb.existCollection('FieldsConfig', databaseName);
+      if (!existCollection) return { msg: 'Não há nenhum campo cadastrado nessa collection', status: 400 };
+
+      const collectionRef = databaseRef.collection('FieldsConfig');
+
+      const existField = await collectionRef.find(
+        {
+          $and: [
+            { 'fieldsEspecifications.currentName': fieldName },
+            { 'fieldsEspecifications.originalName': originalName },
+          ],
+        },
+      ).toArray();
+
+      console.log(existField.length);
+      if (existField.length <= 0) return { msg: `Não há nenhum campo com o nome ${fieldName}`, status: 400 };
+
+      await collectionRef.deleteOne(
+        {
+          $and: [
+            { collectionName },
+            { 'fieldsEspecifications.currentName': fieldName },
+            { 'fieldsEspecifications.originalName': originalName },
+          ],
+        },
+      );
+
+      return true;
+    } catch (error) {
+      console.log(error);
+      throw new Error('Erro ao atualizar campos de uma collection FieldsConfig');
+    }
+  }
 }
 
 export default FieldsConfig;
