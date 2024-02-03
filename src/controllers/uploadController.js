@@ -1,87 +1,54 @@
 import xlsx from 'xlsx';
 import busboy from 'busboy';
-import {
-  Long, Double, Int32,
-} from 'mongodb';
 import MongoDb from '../database/mongoDb';
+
+import FieldsConfig from '../services/fieldsconfigSevice';
+import convertType from '../services/convertTypeToBsonType';
 
 async function insertValuesCollection(collectionName, company, values) {
   const mongoDb = new MongoDb(company);
   const client = await mongoDb.connect();
+  const fieldConfig = new FieldsConfig(mongoDb);
 
-  if (!await mongoDb.existDb(company)) throw new Error('O banco de dados que está tentando acessar não existe');
-  if (!await mongoDb.existCollection(collectionName)) throw new Error(`O collectionName: ${collectionName}, não existe`);
+  const collection = client.db(company).collection(collectionName);
 
-  const database = client.db(company);
-  const collection = database.collection(collectionName);
+  const fieldsList = await fieldConfig.listFields(company, collectionName);
 
-  const rules = await collection.options();
-  const { properties, required } = rules.validator.$jsonSchema;
+  const valuesFormated = values.map((doc) => {
+    const entries = Object.entries(doc);
+    const documentFormated = entries.reduce((ac, entrie) => {
+      const currentName = entrie[0];
+      const value = entrie[1];
 
-  for (const value of values) {
-    if (Object.keys(value).length <= 0) {
-      throw new Error('Valores inválidos, Objeto vazio');
-    }
-    value.default = 0;
-    value.active = true;
+      const currentFieldInf = fieldsList.find((fieldInf) => fieldInf.currentName === currentName);
+      if (!currentFieldInf) throw new Error(`O campo ${currentName} não é um campo valido!`);
 
-    Object.keys(properties).forEach((key) => {
-      const ValueOfProperty = properties[key];
-      if (!Object.prototype.hasOwnProperty.call(value, key) && !required.includes(key)) {
-        switch (ValueOfProperty.bsonType) {
-          case 'long':
-            value[key] = new Long(null);
-            break;
-          case 'date':
-            value[key] = new Date(null);
-            break;
-          case 'double':
-            value[key] = new Double(null);
-            break;
-          case 'int':
-            value[key] = new Int32(null);
-            break;
-          case 'bool':
-            value[key] = false;
-            break;
-          default:
-            value[key] = '';
-        }
+      const { originalName, type: typeCurrentField, required } = currentFieldInf;
+
+      let convertedValue = null;
+      if (!required && !value) {
+        convertedValue = convertType(typeCurrentField, null);
+      } else if (required && !value) {
+        throw new Error(`O campo ${collectionName} é um campo obrigatorio, que deve ser preenchido!`);
+      } else {
+        convertedValue = convertType(typeCurrentField, value);
       }
-    });
 
-    console.log(value);
+      const docFormated = { ...ac, [originalName]: convertedValue };
+      return docFormated;
+    }, {});
 
-    for (const entriesOfValue of Object.entries(value)) {
-      const keyOfDocument = entriesOfValue[0];
-      const valueOfDocument = entriesOfValue[1];
-      const typeOfkeyValue = properties[keyOfDocument]?.bsonType;
+    // add default key in docuemtn
+    documentFormated.active = true;
+    documentFormated.default = 0;
 
-      if (!typeOfkeyValue) throw new Error('Valores inválidos');
-      switch (typeOfkeyValue) {
-        case 'long':
-          if (String(valueOfDocument).length > 15) throw new Error('Valores inválidos, o número enviado ultrapassa o valor máximo de 15 caracteres');
-          value[keyOfDocument] = Long.fromBigInt(BigInt(valueOfDocument));
-          break;
-        case 'date':
-          value[keyOfDocument] = new Date(valueOfDocument);
-          break;
-        case 'double':
-          value[keyOfDocument] = new Double(valueOfDocument);
-          break;
-        case 'int':
-          value[keyOfDocument] = new Int32(valueOfDocument);
-          break;
-        case 'bool':
-          value[keyOfDocument] = !!valueOfDocument;
-          break;
-        default:
-          value[keyOfDocument] = valueOfDocument;
-      }
-    }
-  }
+    return documentFormated;
+  });
+
+  console.log(valuesFormated);
+
   try {
-    await collection.insertMany(values);
+    await collection.insertMany(valuesFormated);
   } catch (error) {
     throw new Error('Arquivo inválido, o arquivo deve seguir as validações da predefinição. Para isso baixe a planilha de exemplo.');
   }

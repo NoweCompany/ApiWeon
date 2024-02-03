@@ -25,7 +25,7 @@ class FieldController {
         });
       }
 
-      const response = { collectionName, fields: responseList };
+      const response = responseList;
 
       await req.historic.registerChange(this.mongoDb.connection);
 

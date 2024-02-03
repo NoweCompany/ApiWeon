@@ -3,8 +3,7 @@ import dotenv from 'dotenv';
 import xlsx from 'xlsx';
 import path from 'path';
 import MongoDb from '../database/mongoDb';
-
-import whiteList from '../config/whiteList';
+import FieldsConfig from '../services/fieldsconfigSevice';
 
 dotenv.config();
 
@@ -13,6 +12,7 @@ class DownloadController {
     const mongoDb = new MongoDb(req.company);
     const client = await mongoDb.connect();
 
+    const fieldConfig = new FieldsConfig(mongoDb);
     try {
       const existDb = await mongoDb.existDb(req.company);
 
@@ -34,7 +34,23 @@ class DownloadController {
       const database = client.db(req.company);
       const collection = database.collection(collectionName);
       const projection = { _id: false, default: false, active: false };
-      const values = await collection.find({}).project(projection).toArray();
+
+      const fields = await fieldConfig.listFields(req.company, collectionName);
+      const values = (await collection.find({})
+        .project(projection)
+        .toArray())
+        .map((doc) => {
+          const docFormated = Object.entries(doc).reduce((ac, entrie) => {
+            const originalKey = entrie[0];
+            const infoCurrentField = fields.find((field) => field.originalName === originalKey);
+            const { currentName } = infoCurrentField;
+            const value = entrie[1];
+            const newDoc = { ...ac, [currentName]: value };
+
+            return newDoc;
+          }, {});
+          return docFormated;
+        }, []);
 
       const fileName = `${req.company}_${collectionName}_${Date.now()}.xlsx`;
       const filePath = path.resolve(__dirname, '..', '..', 'uploads', fileName);
@@ -66,6 +82,7 @@ class DownloadController {
   async index(req, res, next) {
     const mongoDb = new MongoDb(req.company);
     const client = await mongoDb.connect();
+    const fieldConfig = new FieldsConfig(mongoDb);
     try {
       const { collectionName } = req.params;
 
@@ -83,21 +100,13 @@ class DownloadController {
         });
       }
 
-      const database = client.db(req.company);
-      const collection = database.collection(collectionName);
-
-      const options = await collection.options();
-      const properties = Object.keys(options.validator.$jsonSchema.properties);
-
-      const fields = properties.reduce((ac, vl) => {
-        if (!whiteList.fields.includes(vl)) {
-          ac.push(vl);
-          return ac;
-        }
+      const listOfFields = await fieldConfig.listFields(req.company, collectionName);
+      const fields = listOfFields.reduce((ac, fieldInf) => {
+        const { currentName } = fieldInf;
+        ac.push(currentName);
 
         return ac;
       }, []);
-
       const wb = xlsx.utils.book_new();
       const ws = xlsx.utils.json_to_sheet([]);
       xlsx.utils.sheet_add_aoa(ws, [fields], { origin: 'A1' });

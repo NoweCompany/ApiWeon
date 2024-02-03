@@ -1,3 +1,5 @@
+import whiteList from '../config/whiteList';
+
 class FieldsConfig {
   constructor(mongoDb) {
     this.mongoDb = mongoDb;
@@ -30,7 +32,7 @@ class FieldsConfig {
                 description: 'Deve ser um objeto e é obrigatório',
                 patternProperties: {
                   bsonType: 'object',
-                  required: ['originalName', 'currentName', 'type', 'require', 'allNames'],
+                  required: ['originalName', 'currentName', 'type', 'required', 'allNames'],
                   properties: {
                     originalName: {
                       bsonType: 'string',
@@ -44,7 +46,7 @@ class FieldsConfig {
                       bsonType: 'string',
                       description: 'Deve ser uma string e é obrigatório',
                     },
-                    require: {
+                    required: {
                       bsonType: 'bool',
                       description: 'Deve ser um booleano e é obrigatório',
                     },
@@ -84,7 +86,7 @@ class FieldsConfig {
       || typeof fieldIsRequired !== 'boolean'
       || typeof description !== 'string'
     ) {
-      throw new Error('Uma ou mais variáveis são inválidas');
+      return { msg: 'Uma ou mais variáveis são inválidas', status: 400 };
     }
     try {
       await this.setClient();
@@ -105,7 +107,7 @@ class FieldsConfig {
         originalName: originalNameField,
         currentName: currentNameField,
         type: typeField,
-        require: fieldIsRequired,
+        required: fieldIsRequired,
         allNames: [currentNameField],
         description,
       };
@@ -122,7 +124,7 @@ class FieldsConfig {
       typeof databaseName !== 'string'
       || typeof collectionName !== 'string'
     ) {
-      throw new Error('Uma ou mais variáveis são inválidas');
+      return { msg: 'Uma ou mais variáveis são inválidas', status: 400 };
     }
     try {
       await this.setClient();
@@ -130,12 +132,24 @@ class FieldsConfig {
       const databaseRef = this.clientMongoDb.db(databaseName);
 
       const existCollection = await this.mongoDb.existCollection('FieldsConfig', databaseName);
-      if (!existCollection) return { msg: 'Não há nenhum campo cadastrado nessa collection', status: 400 };
+      if (!existCollection || whiteList.collections.includes(collectionName)) {
+        return { msg: 'Essa predefinição não existe', status: 400 };
+      }
 
       const collectionRef = databaseRef.collection('FieldsConfig');
 
       const list = await collectionRef.find({ collectionName }).toArray();
-      return list;
+
+      const formattedData = list.map((doc) => ({
+        key: doc.fieldsEspecifications.currentName,
+        type: doc.fieldsEspecifications.type,
+        required: doc.fieldsEspecifications.required,
+        allNames: doc.fieldsEspecifications.allNames,
+        currentName: doc.fieldsEspecifications.currentName,
+        originalName: doc.fieldsEspecifications.originalName,
+      }));
+
+      return formattedData;
     } catch (error) {
       console.log(error);
       throw new Error('Erro ao listar campos de uma collection, mensegem de erro');
@@ -163,7 +177,7 @@ class FieldsConfig {
       || typeof originalName !== 'string'
       || typeof description !== 'string'
     ) {
-      throw new Error('Uma ou mais variáveis são inválidas');
+      return { msg: 'Uma ou mais variáveis são inválidas', status: 400 };
     }
     try {
       await this.setClient();
@@ -228,7 +242,7 @@ class FieldsConfig {
       || typeof fieldName !== 'string'
       || typeof originalName !== 'string'
     ) {
-      throw new Error('Uma ou mais variáveis são inválidas');
+      return { msg: 'Uma ou mais variáveis são inválidas', status: 400 };
     }
     try {
       await this.setClient();

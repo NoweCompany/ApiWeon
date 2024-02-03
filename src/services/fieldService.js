@@ -1,5 +1,7 @@
 import { randomUUID } from 'node:crypto';
 
+import whiteList from '../config/whiteList';
+
 class FieldService {
   constructor(mongoDb, convertTypeToBsonType, fieldconfigService) {
     this.mongoDb = mongoDb;
@@ -21,19 +23,11 @@ class FieldService {
   async listPropertiesOfSchemaValidation(databaseName, collectionName) {
     try {
       const list = await this.fieldconfigService.listFields(databaseName, collectionName);
-
-      const formattedData = list.map((doc) => ({
-        key: doc.fieldsEspecifications.currentName,
-        type: doc.fieldsEspecifications.type,
-        require: doc.fieldsEspecifications.require,
-        allNames: doc.fieldsEspecifications.allNames,
-        currentName: doc.fieldsEspecifications.currentName,
-        originalName: doc.fieldsEspecifications.originalName,
-      }));
+      if (list.msg && list.status) return list;
 
       return {
         collectionName,
-        fields: formattedData,
+        fields: list,
       };
     } catch (error) {
       console.error(`Erro ao listar schema validator: ${error.message}`);
@@ -50,7 +44,7 @@ class FieldService {
     try {
       await this.setClient();
       const databaseRef = this.clientMongoDb.db(database);
-      if (!(await this.mongoDb.existCollection(collectionName, database))) {
+      if (!(await this.mongoDb.existCollection(collectionName, database)) || whiteList.collections.includes(collectionName)) {
         return { msg: 'Essa predefinição não existe', status: 400 };
       }
 
@@ -124,7 +118,7 @@ class FieldService {
       await this.setClient();
       const databaseRef = this.clientMongoDb.db(databaseName);
 
-      if (!(await this.mongoDb.existCollection(collectionName, databaseName))) {
+      if (!(await this.mongoDb.existCollection(collectionName, databaseName)) || whiteList.collections.includes(collectionName)) {
         return { msg: 'Essa predefinição não existe', status: 400 };
       }
 
@@ -155,7 +149,7 @@ class FieldService {
 
       await databaseRef.command(command);
       // Update all documents, to removing yours properties
-      await collection.updateMany({}, { $unset: { [fieldName]: '' } });
+      await collection.updateMany({}, { $unset: { [originalName]: '' } });
       // Delet all objects that have fewer than three keys
       await collection.deleteMany({ $expr: { $lt: [{ $size: { $objectToArray: '$$ROOT' } }, 4] } });
     } catch (error) {
@@ -173,7 +167,7 @@ class FieldService {
         type, fieldRequired, description,
       } = newValues;
 
-      if (!(await this.mongoDb.existCollection(collectionName, databaseName))) {
+      if (!(await this.mongoDb.existCollection(collectionName, databaseName)) || whiteList.collections.includes(collectionName)) {
         return { msg: 'Essa predefinição não existe', status: 400 };
       }
 

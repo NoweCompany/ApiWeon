@@ -1,6 +1,7 @@
 import dotenv from 'dotenv';
 import MongoDb from '../database/mongoDb';
 import whiteList from '../config/whiteList';
+import FieldsConfigService from '../services/fieldsconfigSevice';
 
 dotenv.config();
 
@@ -64,6 +65,8 @@ class TableController {
   async index(req, res) {
     const mongoDb = new MongoDb(req.company);
     const connection = await mongoDb.connect();
+    const fieldConfig = new FieldsConfigService(mongoDb);
+
     try {
       await mongoDb.existDb(req.company);
 
@@ -78,31 +81,13 @@ class TableController {
       }, []);
 
       for (const collectionName of collections) {
-        const collection = database.collection(collectionName);
-
-        const rule = await collection.options();
-        let fields = [];
-
-        if (Object.keys(rule).length > 0) {
-          const { properties } = rule.validator.$jsonSchema;
-          const { required } = rule.validator.$jsonSchema;
-
-          fields = (Object.entries(properties)).reduce((accumulator, field) => {
-            if (field[0] === 'default' || field[0] === 'active') return accumulator;
-            const objFields = {};
-            [objFields.key] = field;// desestruturação
-            objFields.type = field[1].bsonType;
-            objFields.required = !!(required.includes(field[0]));
-            accumulator.push(objFields);
-            return accumulator;
-          }, []);
-        }
+        const fields = await fieldConfig.listFields(req.company, collectionName);
 
         const obj = { collectionName, fields };
         response.push(obj);
       }
-      await req.historic.registerChange(connection);
 
+      await req.historic.registerChange(connection);
       if (response.length <= 0) return res.status(200).json('Não há tabelas criadas');
 
       return res.status(200).json({ response });
@@ -130,12 +115,15 @@ class TableController {
     try {
       await mongoDb.existDb(req.company);
 
-      if (!await mongoDb.existCollection(collectionName) || collectionName === 'default') {
+      if (!await mongoDb.existCollection(collectionName) || whiteList.collections.includes(collectionName)) {
         throw new Error('Essa collection não existe');
       }
 
       const database = client.db(req.company);
       await database.dropCollection(collectionName);
+      await database.collection('FieldsConfig').deleteMany({
+        collectionName,
+      });
       await req.historic.registerChange(client);
 
       return res.status(200).json({
@@ -165,7 +153,7 @@ class TableController {
     try {
       await mongoDb.existDb(req.company);
 
-      if (!await mongoDb.existCollection(collectionName)) {
+      if (!await mongoDb.existCollection(collectionName) || whiteList.collections.includes(collectionName)) {
         throw new Error('Essa predefinição não existe');
       }
 

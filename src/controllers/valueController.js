@@ -4,6 +4,8 @@ import {
 import MongoDb from '../database/mongoDb';
 import convertTypeToBsonType from '../services/convertTypeToBsonType';
 
+import whiteList from '../config/whiteList';
+
 class ValueController {
   async store(req, res) {
     const { collectionName, values } = req.body;
@@ -17,8 +19,11 @@ class ValueController {
     const client = await mongoDb.connect();
     try {
       if (!await mongoDb.existDb(req.company)) throw new Error('O banco de dados que está tentando acessar não existe');
-
       const database = client.db(req.company);
+
+      if (!await mongoDb.existCollection(collectionName) || whiteList.collections.includes(collectionName)) {
+        throw new Error('Essa collection não existe');
+      }
       const collection = database.collection(collectionName);
 
       const rules = await collection.options();
@@ -58,6 +63,7 @@ class ValueController {
         success: 'Cadastro bem sucedido',
       });
     } catch (e) {
+      console.log(e);
       return res.status(400).json({
         errors: e.message || 'Ocorreu um erro inesperado',
       });
@@ -84,10 +90,9 @@ class ValueController {
 
       const database = client.db(req.company);
 
-      if (!await mongoDb.existCollection(collectionName)) {
-        throw new Error('Essa predefinição não existe');
+      if (!await mongoDb.existCollection(collectionName) || whiteList.collections.includes(collectionName)) {
+        throw new Error('Essa collection não existe');
       }
-
       const collection = database.collection(collectionName);
 
       let values = await collection.find({ active: true }).limit(Number(limit)).toArray();
@@ -128,6 +133,9 @@ class ValueController {
     const client = await mongoDb.connect();
 
     try {
+      if (!await mongoDb.existCollection(collectionName) || whiteList.collections.includes(collectionName)) {
+        throw new Error('Essa collection não existe');
+      }
       const collection = client.db(req.company).collection(collectionName);
 
       const existValue = await collection.findOne({ _id: new ObjectId(id) });
@@ -168,6 +176,9 @@ class ValueController {
     const client = await mongoDb.connect();
 
     try {
+      if (!await mongoDb.existCollection(collectionName) || whiteList.collections.includes(collectionName)) {
+        throw new Error('Essa collection não existe');
+      }
       const collection = client.db(req.company).collection(collectionName);
 
       if (!await mongoDb.existValue(id, collectionName)) {

@@ -1,4 +1,5 @@
 import MongoDb from '../database/mongoDb';
+import whiteList from '../config/whiteList';
 
 async function getRules(dbName, collectionName, client) {
   const collection = client.db(dbName).collection(collectionName);
@@ -44,7 +45,7 @@ class DashboardController {
       if (!dashboardName || !name || !preset || !textField || !numberField || !typeChart) throw new Error('Envie os valores corretos');
       if (!Object.keys(typesChartsAllowed).includes(typeChart)) throw new Error(`O tipo de gráfico '${typeChart}' não é permitido!`);
       if (!await mongoDb.existCollection(collectionNameFormated)) throw new Error(`O dashboard '${dashboardName}' não existe!`);
-      if (!await mongoDb.existCollection(preset)) throw new Error('Essa predefinição não existe!');
+      if (!await mongoDb.existCollection(preset) || whiteList.collections.includes(preset)) throw new Error('Essa predefinição não existe!');
 
       const rulesOfpreset = await getRules(req.company, preset, client);
 
