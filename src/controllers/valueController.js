@@ -1,7 +1,7 @@
 import {
   ObjectId, Long,
 } from 'mongodb';
-import MongoDb from '../database/mongoDb';
+import MongoDb from '../database/MongoDbConnection';
 import convertTypeToBsonType from '../services/convertTypeToBsonType';
 
 import whiteList from '../config/whiteList';

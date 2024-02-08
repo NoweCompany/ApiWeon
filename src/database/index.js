@@ -1,29 +1,63 @@
-import { Sequelize } from 'sequelize';
-import User from '../models/UserModels';
-import Permission from '../models/PermissionsModel';
-import Company from '../models/CompanysModel';
+import dotenv from 'dotenv';
 
-import dbConfig from '../config/dbConfig';
+import MongoDbConnection from './MongoDbConnection';
+import MysqlConnection from './MysqlConnection';
 
-const conect = new Sequelize(dbConfig);
+import conectionConfig from '../config/connectionConfig';
 
-async function virifyConect(sequelize) {
-  try {
-    await sequelize.authenticate();
-    console.log('Connection has been established successfully.');
-  } catch (error) {
-    console.error('Unable to connect to the database:', error);
-  }
+dotenv.config();
+
+const mysqlInstance = new MysqlConnection(conectionConfig);
+const mongoInstance = new MongoDbConnection(process.env.MONGO_CONNECTION_STRING);
+
+// const { client } = mongoInstance;
+// client.on('connectionPoolCreated', (event) => {
+//   console.log('Pool de conexões criado:', event);
+// });
+
+// client.on('connectionPoolReady', () => {
+//   console.log('Pool de conexões pronto');
+// });
+
+// client.on('connectionPoolClosed', () => {
+//   console.log('Pool de conexões fechado');
+// });
+
+// client.on('connectionCreated', (event) => {
+//   console.log('Conexão criada:', event);
+// });
+
+// client.on('connectionReady', (event) => {
+//   console.log('Conexão pronta:');
+// });
+
+// client.on('connectionClosed', (event) => {
+//   console.log('Conexão fechada:', event);
+// });
+
+// client.on('connectionCheckOutStarted', () => {
+//   console.log('Iniciando checkout de conexão');
+// });
+
+// client.on('connectionCheckOutFailed', (event) => {
+//   console.log('Falha no checkout de conexão:', event);
+// });
+
+// client.on('connectionCheckedOut', () => {
+//   console.log('Checkout de conexão concluído: a operação adquirio a conexão com sucesso');
+// });
+
+// client.on('connectionCheckedIn', (event) => {
+//   console.log('Conexão devolvida ao pool:', event);
+// });
+
+// client.on('connectionPoolCleared', () => {
+//   console.log('Pool de conexões limpo');
+// });
+
+function testConnections() {
+  Promise.all([mysqlInstance.virifyConect(), mongoInstance.virifyConect()])
+    .then((result) => console.log(result))
+    .catch((err) => console.log(err));
 }
-
-virifyConect(conect);
-
-User.init(conect);
-Company.init(conect);
-Permission.init(conect);
-
-Permission.associate(conect.models);
-Company.associate(conect.models);
-User.associate(conect.models);
-
-export default conect;
+export { mysqlInstance, mongoInstance, testConnections };

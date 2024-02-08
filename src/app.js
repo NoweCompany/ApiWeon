@@ -6,17 +6,17 @@ import path from 'path';
 import configCors from './middlewares/configCors';
 
 import usersRoutes from './routes/usersRouter';
+import collectionRouter from './routes/collectionRouter';
 import tokenRoutes from './routes/tokenRouter';
-import tableRoutes from './routes/collectionRouter';
-import fieldRoutes from './routes/fieldRouter';
-import valueRoutes from './routes/valueRouter';
-import trashRouter from './routes/trashRouter';
-import downloadRouter from './routes/downloadRouter';
-import uploadRouter from './routes/uploadRouter';
-import chartsRouter from './routes/chartsRouter';
-import kpiRouter from './routes/kpiRouter';
-import dashboardRouter from './routes/dashboardRouter';
-import historicRouter from './routes/historicRouter';
+// import fieldRoutes from './routes/fieldRouter';
+// import valueRoutes from './routes/valueRouter';
+// import trashRouter from './routes/trashRouter';
+// import downloadRouter from './routes/downloadRouter';
+// import uploadRouter from './routes/uploadRouter';
+// import chartsRouter from './routes/chartsRouter';
+// import kpiRouter from './routes/kpiRouter';
+// import dashboardRouter from './routes/dashboardRouter';
+// import historicRouter from './routes/historicRouter';
 
 dotenv.config();
 
@@ -37,17 +37,17 @@ class App {
 
   routes() {
     this.app.use('/users', usersRoutes);
+    this.app.use('/collection', collectionRouter);
     this.app.use('/token', tokenRoutes);
-    this.app.use('/collection', tableRoutes);
-    this.app.use('/field', fieldRoutes);
-    this.app.use('/value', valueRoutes);
-    this.app.use('/trash', trashRouter);
-    this.app.use('/download', downloadRouter);
-    this.app.use('/upload', uploadRouter);
-    this.app.use('/dashboard', dashboardRouter);
-    this.app.use('/chart', chartsRouter);
-    this.app.use('/kpi', kpiRouter);
-    this.app.use('/historic', historicRouter);
+    // this.app.use('/field', fieldRoutes);
+    // this.app.use('/value', valueRoutes);
+    // this.app.use('/trash', trashRouter);
+    // this.app.use('/download', downloadRouter);
+    // this.app.use('/upload', uploadRouter);
+    // this.app.use('/dashboard', dashboardRouter);
+    // this.app.use('/chart', chartsRouter);
+    // this.app.use('/kpi', kpiRouter);
+    // this.app.use('/historic', historicRouter);
   }
 }
 

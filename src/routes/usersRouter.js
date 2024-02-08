@@ -10,8 +10,8 @@ import loginRequire from '../middlewares/loginRequire';
 const routes = new Router();
 
 routes.get('/', loginRequire, userController.index);
-routes.post('/', loginRequire, permission('insert'), userController.store);
-routes.put('/', loginRequire, permission('edit'), userController.update);
+routes.post('/', loginRequire, permission('adm'), userController.store);
+routes.put('/', loginRequire, permission('adm'), userController.update);
 routes.delete('/:id', loginRequire, permission('adm'), userController.delete);
 
 // rotas de permissões

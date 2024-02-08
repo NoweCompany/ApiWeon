@@ -1,6 +1,6 @@
 import dotenv from 'dotenv';
 import { ObjectId } from 'mongodb';
-import MongoDb from '../database/mongoDb';
+import MongoDb from '../database/MongoDbConnection';
 
 dotenv.config();
 

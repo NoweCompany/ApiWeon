@@ -1,4 +1,5 @@
-import Mongo from '../database/mongoDb';
+import { mongoInstance } from '../database';
+import MongoValidation from '../database/MongoValidation';
 
 export default function historic(req, res, next) {
   const {
@@ -17,14 +18,17 @@ export default function historic(req, res, next) {
       userEmail,
       company,
       method,
-      registerChange: async (connection) => {
-        const mongoDb = new Mongo(company);
-        await mongoDb.existDb(mongoDb.database);
-        const database = connection.db(mongoDb.database);
+      registerChange: async () => {
+        const { client } = mongoInstance;
+        const mongoValidation = new MongoValidation(company, client);
 
-        const arrayCollection = await database.listCollections().toArray();
-        const existCollection = arrayCollection.some((collection) => collection.name === 'historic');
+        const existDataBase = await mongoValidation.existDb(company);
+        if (!existDataBase) {
+          return res.status(400).json('O bancos de dados q ue vc esta tentando acessar não existe');
+        }
+        const database = client.db(company);
 
+        const existCollection = await mongoValidation.existCollection('historic');
         if (!existCollection) {
           await database.createCollection('historic', {
             validator: {

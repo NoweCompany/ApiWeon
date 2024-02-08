@@ -10,7 +10,7 @@ import FieldService from '../services/fieldService';
 import FieldsconfigSevice from '../services/fieldsconfigSevice';
 import convertTypeToBsonType from '../services/convertTypeToBsonType';
 
-import MongoDb from '../database/mongoDb';
+import MongoDb from '../database/MongoDbConnection';
 
 const routes = new Router();
 

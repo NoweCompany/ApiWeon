@@ -1,6 +1,10 @@
 import app from './app';
-import './database';
+import { testConnections } from './database';
+
+testConnections();
 
 const port = process.env.SERVER_PORT;
 
-app.listen(port, () => console.log(`http://localhost:${port}`));
+app.listen(port, () => {
+  console.log(`Server is running in -> http://localhost:${port}`);
+});

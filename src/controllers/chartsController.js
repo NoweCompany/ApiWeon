@@ -1,4 +1,4 @@
-import MongoDb from '../database/mongoDb';
+import MongoDb from '../database/MongoDbConnection';
 import whiteList from '../config/whiteList';
 
 async function getRules(dbName, collectionName, client) {

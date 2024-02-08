@@ -43,8 +43,9 @@ export default class User extends Model {
     return this;
   }
 
-  passwordIsValid(password) {
-    return bcryptjs.compare(password, this.password_hash);
+  async passwordIsValid(password) {
+    const compare = await bcryptjs.compare(password, this.password_hash);
+    return compare;
   }
 
   static associate(models) {

@@ -1,6 +1,6 @@
 import xlsx from 'xlsx';
 import busboy from 'busboy';
-import MongoDb from '../database/mongoDb';
+import MongoDb from '../database/MongoDbConnection';
 
 import FieldsConfig from '../services/fieldsconfigSevice';
 import convertType from '../services/convertTypeToBsonType';

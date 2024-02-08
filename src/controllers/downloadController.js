@@ -2,7 +2,7 @@
 import dotenv from 'dotenv';
 import xlsx from 'xlsx';
 import path from 'path';
-import MongoDb from '../database/mongoDb';
+import MongoDb from '../database/MongoDbConnection';
 import FieldsConfig from '../services/fieldsconfigSevice';
 
 dotenv.config();

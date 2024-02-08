@@ -1,5 +1,5 @@
 import { ObjectId } from 'mongodb';
-import MongoDb from '../database/mongoDb';
+import MongoDb from '../database/MongoDbConnection';
 import whiteList from '../config/whiteList';
 
 class TrashController {

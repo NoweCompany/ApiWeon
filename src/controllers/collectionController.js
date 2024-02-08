@@ -1,64 +1,32 @@
 import dotenv from 'dotenv';
-import MongoDb from '../database/mongoDb';
+import MongoDb from '../database/MongoDbConnection';
 import whiteList from '../config/whiteList';
 import FieldsConfigService from '../services/fieldsconfigSevice';
 
 dotenv.config();
 
-class TableController {
+class CollectionController {
+  constructor(collectionService) {
+    this.collectionService = collectionService;
+  }
+
   // table
   async store(req, res) {
-    const mongoDb = new MongoDb(req.company);
-    const client = await mongoDb.connect();
-
     try {
-      await mongoDb.existDb(req.company);
-      const database = client.db(req.company);
-
       const { collectionName } = req.body;
-      if (!collectionName) throw new Error('Envie os valores corretos');
+      const dataBaseName = req.company;
 
-      const collections = (await database.listCollections().toArray()).map((vl) => vl.name);
+      const createdCollection = await this.collectionService.createNewCollection(dataBaseName, collectionName);
 
-      if (collections.includes(collectionName)) {
-        return res.status(400).json({
-          errors: 'Essa predefinição já existe',
-        });
-      }
+      const { status, msg } = createdCollection;
 
-      await database.createCollection(collectionName, {
-        validator: {
-          $jsonSchema: {
-            bsonType: 'object',
-            title: `${collectionName} rule`,
-            required: ['default', 'active'],
-            properties: {
-              default: {
-                bsonType: 'int',
-                description: 'Campo padrão',
-              },
-              active: {
-                bsonType: 'bool',
-                description: 'Campo para verificar o estado do documento',
-              },
-            },
-          },
-        },
-        validationLevel: 'moderate',
-        validationAction: 'error',
-      });
+      await req.historic.registerChange();
 
-      await req.historic.registerChange(client);
-
-      return res.status(200).json({
-        success: 'Predefinição criada com sucesso',
-      });
+      return res.status(status).json(msg);
     } catch (e) {
-      return res.status(400).json({
+      return res.status(500).json({
         errors: e.message || 'Ocorreu um erro inesperado',
       });
-    } finally {
-      mongoDb.close();
     }
   }
 
@@ -174,4 +142,4 @@ class TableController {
   }
 }
 
-export default new TableController();
+export default CollectionController;

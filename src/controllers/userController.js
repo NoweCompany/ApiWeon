@@ -1,7 +1,9 @@
 import Company from '../models/CompanysModel';
 import Permission from '../models/PermissionsModel';
 import User from '../models/UserModels';
-import sequelize from '../database/index';
+import { mysqlInstance } from '../database';
+
+const sequelize = mysqlInstance.connection;
 
 class UserController {
   async store(req, res) {

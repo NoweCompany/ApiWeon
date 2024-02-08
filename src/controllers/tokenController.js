@@ -1,56 +1,51 @@
-import jwt from 'jsonwebtoken';
-import User from '../models/UserModels';
-import Company from '../models/CompanysModel';
-import Permission from '../models/PermissionsModel';
+export default class TokenController {
+  constructor(tokenService) {
+    this.tokenService = tokenService;
+  }
 
-class TokenController {
   async store(req, res) {
     try {
       const { email, password } = req.body;
       if (!email || !password) {
         return res.status(400).json({
-          errors: ['Valores inválidos'],
+          error: ['Valores inválidos'],
         });
       }
 
-      const user = await User.findOne({ where: { email } });
-
+      const user = await this.tokenService.verifyIfUserIsValid(email);
       if (!user) {
         return res.status(400).json({
-          errors: ['Usuario não existe'],
+          error: 'Usuário invalido',
         });
       }
 
-      if (!(await user.passwordIsValid(password))) {
-        return res.status(401).json({
-          errors: ['Senha inválida'],
+      const verifyPass = await this.tokenService.verifyUserPassword(user, password);
+      if (!verifyPass) {
+        return res.status(400).json({
+          error: 'Senha invalida',
         });
       }
-      const { id, nome } = user;
-      const token = jwt.sign({ id, email }, process.env.TOKEN_SECRET, {
-        expiresIn: process.env.TOKEN_EXPIRATION,
-      });
 
-      const userCompany = await Company.findOne({ where: { company_user_id: id } });
-      const companyUser = await Company.findOne({ where: { company_user_id: id } });
-      const permissionData = await Permission.findOne({ where: { user_id: id } });
+      delete user.password_hash;
+      const userdata = {
+        id: user.id,
+        email: user.id,
+        createdAt: user.createdAt,
+        updatedAt: user.updatedAt,
+        userCompany: user.userCompany,
+        permission: user.permission,
+      };
+      const { id } = user;
+      const token = await this.tokenService.generateToken(id, email);
 
-      if (!companyUser) {
-        return res.status(401).json({
-          errors: 'Usuário não está associado a uma compania.',
-        });
-      }
       return res.json({
         token,
-        user: {
-          nome, id, email, idCompany: userCompany.id, nameCompany: userCompany.name,
-        },
-        companyUser,
-        permissionData,
+        user: userdata,
       });
     } catch (e) {
+      console.log(e);
       return res.status(400).json({
-        errors: 'Ocorreu um erro inesperado',
+        error: `Ocorreu um erro inesperado ao logar: ${e.message}`,
       });
     }
   }
@@ -59,33 +54,32 @@ class TokenController {
     try {
       const { token } = req.body;
 
-      const dados = jwt.verify(token, process.env.TOKEN_SECRET);
-      const { id, email } = dados;
+      const { email } = this.tokenService.verifyToken(token);
 
-      const user = await User.findOne({ where: id, email });
-      const { createdAt, updatedAt } = user;
+      const user = await this.tokenService.verifyIfUserIsValid(email);
+
       if (!user) {
-        return res.status(401).json({
-          errors: ['Usuário inválido'],
+        return res.status(400).json({
+          error: 'Usuário invalido',
         });
       }
 
-      const companyUser = await Company.findOne({ where: { company_user_id: id } });
-      const permissionData = await Permission.findOne({ where: { user_id: id } });
+      const userdata = {
+        id: user.id,
+        email: user.id,
+        createdAt: user.createdAt,
+        updatedAt: user.updatedAt,
+        userCompany: user.userCompany,
+        permission: user.permission,
+      };
+
       return res.status(200).json({
-        id,
-        email,
-        createdAt,
-        updatedAt,
-        companyUser,
-        permissionData,
+        ...userdata,
       });
     } catch (e) {
       return res.status(400).json({
-        errors: 'Ocorreu um erro inesperado',
+        error: `Ocorreu um erro inesperado, o verificar token: ${e.message}`,
       });
     }
   }
 }
-
-export default new TokenController();

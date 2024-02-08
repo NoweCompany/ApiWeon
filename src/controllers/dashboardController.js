@@ -1,4 +1,4 @@
-import MongoDb from '../database/mongoDb';
+import MongoDb from '../database/MongoDbConnection';
 
 function formaterNameDashboard(name) {
   return `dashboard_${(name.toLowerCase().trim()).split(' ').join('_')}`;

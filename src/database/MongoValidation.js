@@ -1,15 +1,11 @@
-import { MongoClient, ObjectId } from 'mongodb';
+import { ObjectId } from 'mongodb';
 
-import dotenv from 'dotenv';
-
-dotenv.config();
-
-class Mongo {
+class MongoValidation {
   #database = null;
 
-  constructor(database) {
+  constructor(database, connection) {
     this.database = database;
-    this.connection = null;
+    this.connection = connection;
   }
 
   set database(databaseName) {
@@ -20,42 +16,16 @@ class Mongo {
     return this.#database;
   }
 
-  async connect() {
-    try {
-      if (this.connection) return this.connection;
-      const client = new MongoClient(`${process.env.MONGO_CONNECTION_STRING}`, {
-        useNewUrlParser: true,
-        useUnifiedTopology: true,
-      });
-      await client.connect();
-      this.connection = client;
-
-      return this.connection;
-    } catch (error) {
-      throw new Error(error);
-    }
-  }
-
   async existDb(databaseName) {
     try {
-      if (!this.connection) return;
       const databasesList = (await this.connection.db().admin().listDatabases()).databases.map((vl) => vl.name);
 
       const exist = databasesList.includes(databaseName);
-      if (!exist) throw new Error('O bancos de dados q ue vc esta tentando acessar não existe');
 
       return exist;
     } catch (error) {
-      throw new Error('O bancos de dados q ue vc esta tentando acessar não existe');
-    }
-  }
-
-  close() {
-    try {
-      this.connection.close();
-      this.connection = null;
-    } catch (error) {
-      throw new Error('Erro ao tentar fechar a conexão');
+      console.log(error);
+      throw new Error('Erro ao verificar se o bancos de dados existe');
     }
   }
 
@@ -68,7 +38,6 @@ class Mongo {
 
       return arrayCollection.some((collection) => collection.name === collectionName);
     } catch (err) {
-      console.log(err);
       throw new Error('Erro ao verificar a existência da coleção');
     }
   }
@@ -91,4 +60,4 @@ class Mongo {
   }
 }
 
-export default Mongo;
+export default MongoValidation;
