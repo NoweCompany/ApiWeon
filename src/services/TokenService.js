@@ -1,8 +1,9 @@
 import jwt from 'jsonwebtoken';
 
 export default class TokenService {
-  constructor(UserModel) {
+  constructor(UserModel, mongoDbValidation) {
     this.UserModel = UserModel;
+    this.mongoDbValidation = mongoDbValidation;
   }
 
   async verifyIfUserIsValid(email) {
@@ -27,6 +28,11 @@ export default class TokenService {
         error: 'Error ao validar o usuário',
       });
     }
+  }
+
+  async verifyCompanyUser(company) {
+    const existDb = await this.mongoDbValidation.existDb(company);
+    return existDb;
   }
 
   async verifyUserPassword(user, password) {

@@ -1,18 +1,7 @@
-import whiteList from '../config/whiteList';
-
-class FieldsConfig {
-  constructor(mongoDb) {
-    this.mongoDb = mongoDb;
-    this.clientMongoDb = null;
-  }
-
-  async setClient() {
-    try {
-      this.clientMongoDb = await this.mongoDb.connect();
-    } catch (error) {
-      console.log('Error ao setar client mongodb');
-      return { msg: 'Error ao setar client mongodb', status: 500 };
-    }
+export default class FieldsConfig {
+  constructor(mongoDbValidation, client) {
+    this.mongoDbValidation = mongoDbValidation;
+    this.client = client;
   }
 
   async #createCollectionFieldConfig(databaseName) {
@@ -65,8 +54,7 @@ class FieldsConfig {
         validationAction: 'error',
       };
 
-      await this.setClient();
-      const databaseRef = this.clientMongoDb.db(databaseName);
+      const databaseRef = this.client.db(databaseName);
       await databaseRef.createCollection(
         'FieldsConfig',
         valitationSchema,
@@ -77,8 +65,16 @@ class FieldsConfig {
   }
 
   // Create and store field in collection FieldConfig
-  async setFieldInConfig(databaseName, collectionName, originalNameField, currentNameField, typeField, fieldIsRequired, description) {
-    console.log(this.clientMongoDb);
+  async setFieldInConfig(
+    databaseName,
+    collectionName,
+    originalNameField,
+    currentNameField,
+    typeField,
+    fieldIsRequired,
+    description,
+  ) {
+    console.log(this.client);
     if (
       typeof collectionName !== 'string'
       || typeof originalNameField !== 'string'
@@ -89,9 +85,8 @@ class FieldsConfig {
       return { msg: 'Uma ou mais variáveis são inválidas', status: 400 };
     }
     try {
-      await this.setClient();
-      const databseRef = this.clientMongoDb.db(databaseName);
-      const existCollection = await this.mongoDb.existCollection(collectionName, databaseName);
+      const databseRef = this.client.db(databaseName);
+      const existCollection = await this.mongoDbValidation.existCollection(collectionName, databaseName);
 
       if (!existCollection) await this.#createCollectionFieldConfig();
       const collection = databseRef.collection('FieldsConfig');
@@ -127,14 +122,7 @@ class FieldsConfig {
       return { msg: 'Uma ou mais variáveis são inválidas', status: 400 };
     }
     try {
-      await this.setClient();
-
-      const databaseRef = this.clientMongoDb.db(databaseName);
-
-      const existCollection = await this.mongoDb.existCollection('FieldsConfig', databaseName);
-      if (!existCollection || whiteList.collections.includes(collectionName)) {
-        return { msg: 'Essa predefinição não existe', status: 400 };
-      }
+      const databaseRef = this.client.db(databaseName);
 
       const collectionRef = databaseRef.collection('FieldsConfig');
 
@@ -180,11 +168,9 @@ class FieldsConfig {
       return { msg: 'Uma ou mais variáveis são inválidas', status: 400 };
     }
     try {
-      await this.setClient();
+      const databaseRef = this.client.db(databaseName);
 
-      const databaseRef = this.clientMongoDb.db(databaseName);
-
-      const existCollection = await this.mongoDb.existCollection('FieldsConfig', databaseName);
+      const existCollection = await this.mongoDbValidation.existCollection('FieldsConfig', databaseName);
       if (!existCollection) return { msg: 'Não há nenhum campo cadastrado nessa collection', status: 400 };
 
       const collectionRef = databaseRef.collection('FieldsConfig');
@@ -230,6 +216,17 @@ class FieldsConfig {
     }
   }
 
+  async removeAllFieldsInCollection(databaseName, collectionName) {
+    try {
+      const databaseRef = this.client.db(databaseName);
+      await databaseRef.collection('FieldsConfig').deleteMany({
+        collectionName,
+      });
+    } catch (error) {
+      throw new Error(`Erro ao remover todos os campos da coleção ${collectionName}: ${error.message}`);
+    }
+  }
+
   async removeFieldInFieldsConfig(
     databaseName,
     collectionName,
@@ -245,11 +242,9 @@ class FieldsConfig {
       return { msg: 'Uma ou mais variáveis são inválidas', status: 400 };
     }
     try {
-      await this.setClient();
+      const databaseRef = this.client.db(databaseName);
 
-      const databaseRef = this.clientMongoDb.db(databaseName);
-
-      const existCollection = await this.mongoDb.existCollection('FieldsConfig', databaseName);
+      const existCollection = await this.mongoDbValidation.existCollection('FieldsConfig', databaseName);
       if (!existCollection) return { msg: 'Não há nenhum campo cadastrado nessa collection', status: 400 };
 
       const collectionRef = databaseRef.collection('FieldsConfig');
@@ -283,5 +278,3 @@ class FieldsConfig {
     }
   }
 }
-
-export default FieldsConfig;

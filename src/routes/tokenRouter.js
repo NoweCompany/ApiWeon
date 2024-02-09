@@ -5,9 +5,14 @@ import TokenService from '../services/TokenService';
 
 import User from '../models/UserModels';
 
+import MongoDbValidation from '../database/MongoValidation';
+import { mongoInstance } from '../database';
+
+const mongoDbValidation = new MongoDbValidation(mongoInstance.client);
+
 const routes = new Router();
 
-const tokenServive = new TokenService(User);
+const tokenServive = new TokenService(User, mongoDbValidation);
 const tokenController = new TokenController(tokenServive);
 
 routes.post('/', tokenController.store.bind(tokenController));

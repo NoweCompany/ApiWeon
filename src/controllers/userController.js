@@ -1,133 +1,83 @@
-import Company from '../models/CompanysModel';
-import Permission from '../models/PermissionsModel';
-import User from '../models/UserModels';
-import { mysqlInstance } from '../database';
+export default class UserController {
+  constructor(userService) {
+    this.userService = userService;
+  }
 
-const sequelize = mysqlInstance.connection;
-
-class UserController {
   async store(req, res) {
-    const t = await sequelize.transaction();
     try {
-      const {
-        email, password, permission,
-      } = req.body;
-      const {
-        adm,
-        insert,
-        edit,
-        delet,
-      } = permission;
+      const { email, password, permission } = req.body;
 
-      if (!email || !password) {
-        await t.commit();
-        return res.status(400).json({
-          errors: 'Valores inválidos',
-        });
+      if (!this.userService.validateInput(email, password)) {
+        return res.status(400).json({ errors: 'Valores inválidos' });
       }
 
-      const emailExist = !!(await User.findOne({ where: { email } }));
-      if (emailExist) {
-        await t.commit();
-        return res.status(400).json({
-          errors: 'Um usuário com esse email já existe',
-        });
+      const emailExists = await this.userService.isEmailInUse(email);
+      if (emailExists) {
+        return res.status(400).json({ errors: 'Um usuário com esse email já existe' });
       }
-      const companyFormated = String(req.company).trim().toLowerCase();
-      const newUser = await User.create({ email, password }, { transaction: t });
-      const { id: userId } = newUser;
 
-      await Company.create({
-        name: companyFormated,
-        company_user_id: userId,
-      }, { transaction: t });
-
-      await Permission.create({
-        id: userId,
-        adm,
-        insert,
-        edit,
-        delet,
-        user_id: userId,
-      }, { transaction: t });
-
-      await t.commit();
+      const userId = await this.userService.createUser(email, password, req.company, permission);
       delete req.body.password;
 
-      return res.json(Object.assign(req.body, { userId }));
-    } catch (e) {
-      t.rollback();
-      return res.status(400).json({
-        errors: 'Ocorreu um erro inesperado',
-      });
+      return res.json({ userId, ...req.body });
+    } catch (error) {
+      console.log(error);
+      return res.status(500).json({ errors: 'Ocorreu um erro inesperado' });
     }
   }
 
   // Index
   async index(req, res) {
     try {
-      const { company } = req;
-      const users = await User.findAll({
-        include: [
-          {
-            model: Company,
-            as: 'userCompany',
-            where: { name: company },
-          },
-          {
-            model: Permission,
-            as: 'permission',
-          },
-        ],
-        attributes: {
-          exclude: [
-            'password_hash',
-          ],
-        },
-      });
+      const users = await this.userService.findUsersByCompany(req.company);
       return res.json(users);
-    } catch (e) {
-      console.log(e);
-      return res.status(400).json({
-        errors: 'Ocorreu um erro inesperado',
-      });
+    } catch (error) {
+      return res.status(500).json({ errors: 'Ocorreu um erro inesperado' });
     }
   }
 
   // Show
   async show(req, res) {
     try {
-      const user = await User.findByPk(req.params.id);
+      if (!this.userService.validateInput(req.params.id)) {
+        return res.status(400).json({ errors: 'Valores inválidos' });
+      }
+      const user = await this.userService.findUserById(req.params.id);
 
-      const { id, email } = user;
-      return res.json({ id, email });
-    } catch (e) {
-      return res.status(400).json({
-        errors: 'Ocorreu um erro inesperado',
+      const userdata = {
+        id: user.id,
+        email: user.email,
+        createdAt: user.createdAt,
+        updatedAt: user.updatedAt,
+        userCompany: user.userCompany,
+        permission: user.permission,
+      };
+      return res.json({
+        ...userdata,
       });
+    } catch (error) {
+      return res.status(500).json({ errors: 'Ocorreu um erro inesperado' });
     }
   }
 
   // Update
   async update(req, res) {
     try {
-      const user = await User.findByPk(req.userId);
-
+      const user = await this.userService.findUserById(req.userId);
       if (!user) {
         return res.status(400).json({
-          errors: 'Usuário não existe',
+          error: 'Este usuário não existe',
         });
       }
 
       const { email, password } = req.body;
 
-      const novosDados = await user.update({ email, password });
-      const { newId, newEmail } = novosDados;
+      const updatedUser = await this.userService.updateUserData(user, { email, password });
+
+      const { id: newId, email: newEmail } = updatedUser;
       return res.json({ newId, newEmail });
-    } catch (e) {
-      return res.status(400).json({
-        errors: 'Ocorreu um erro inesperado',
-      });
+    } catch (error) {
+      return res.status(500).json({ errors: 'Ocorreu um erro inesperado' });
     }
   }
 
@@ -139,36 +89,33 @@ class UserController {
           errors: 'Valores inválidos',
         });
       }
-      const user = await User.findByPk(req.params.id);
 
+      const user = await this.userService.findUserById(req.params.id);
       if (!user) {
         return res.status(400).json({
-          errors: 'Usuário não existe',
+          error: 'Este usuário não existe',
         });
       }
 
-      const company = await Company.findOne({ where: { company_user_id: user.id } });
-
+      const company = await this.userService.findCompanyByUserId(user.id);
       if (!company) {
         return res.status(400).json({
-          errors: 'Compania de seu usuário não existe ou é inválida!',
+          error: 'Compania do usuário não encontrada ou inválida',
         });
       }
 
-      if (company.name !== req.company) {
+      const validateCompany = this.userService.validateCompany(company.name, req.company);
+      if (!validateCompany) {
         return res.status(400).json({
-          errors: 'Você só pode excluir usuários que pertencem a mesma empresa que você!',
+          error: 'Você só pode excluir usuários que pertencem à mesma empresa que você',
         });
       }
 
       await user.destroy();
-      return res.json(null);
-    } catch (e) {
-      return res.status(500).json({
-        errors: 'Ocorreu um erro inesperado',
-      });
+
+      return res.json('Usuário excluído com sucesso');
+    } catch (error) {
+      return res.status(500).json({ errors: 'Ocorreu um erro inesperado' });
     }
   }
 }
-
-export default new UserController();

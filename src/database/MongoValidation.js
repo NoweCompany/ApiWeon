@@ -1,24 +1,13 @@
 import { ObjectId } from 'mongodb';
 
 class MongoValidation {
-  #database = null;
-
-  constructor(database, connection) {
-    this.database = database;
-    this.connection = connection;
-  }
-
-  set database(databaseName) {
-    this.#database = databaseName;
-  }
-
-  get database() {
-    return this.#database;
+  constructor(client) {
+    this.client = client;
   }
 
   async existDb(databaseName) {
     try {
-      const databasesList = (await this.connection.db().admin().listDatabases()).databases.map((vl) => vl.name);
+      const databasesList = (await this.client.db().admin().listDatabases()).databases.map((vl) => vl.name);
 
       const exist = databasesList.includes(databaseName);
 
@@ -29,23 +18,23 @@ class MongoValidation {
     }
   }
 
-  async existCollection(collectionName, databaseName) {
+  async existCollection(databaseName, collectionName) {
     try {
-      const database = databaseName || this.database;
-
-      const databaseRef = this.connection.db(database);
+      const database = databaseName;
+      const databaseRef = this.client.db(database);
       const arrayCollection = await databaseRef.listCollections().toArray();
 
       return arrayCollection.some((collection) => collection.name === collectionName);
     } catch (err) {
+      console.log(err);
       throw new Error('Erro ao verificar a existência da coleção');
     }
   }
 
-  async existValue(id, collectionName) {
+  async existValue(databaseName, collectionName, id) {
     const filter = { _id: new ObjectId(id) };
 
-    const conter = await this.connection.db(this.database).collection(collectionName).countDocuments(
+    const conter = await this.client.db(databaseName).collection(collectionName).countDocuments(
       filter,
       (err) => {
         throw new Error(err);

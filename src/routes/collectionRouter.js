@@ -1,6 +1,7 @@
 import { Router } from 'express';
+import whiteList from '../config/whiteList';
 
-import loginRequire from '../middlewares/loginRequire';
+import Login from '../middlewares/Login';
 import historic from '../middlewares/historic';
 import permission from '../middlewares/permission';
 
@@ -8,16 +9,39 @@ import MongoDbValidation from '../database/MongoValidation';
 import { mongoInstance } from '../database';
 
 import CollectionService from '../services/CollectionService';
+import FieldsConfigService from '../services/FieldsconfigSevice';
+
 import CollectionController from '../controllers/collectionController';
 
-const mongoDbValidation = new MongoDbValidation();
-const collectionService = new CollectionService(mongoInstance.client, mongoDbValidation);
-const collectionController = new CollectionController(collectionService);
+const mongoDbValidation = new MongoDbValidation(mongoInstance.client);
+const login = new Login(mongoDbValidation);
+
+const fieldsConfigService = new FieldsConfigService(mongoDbValidation, mongoInstance.client);
+const collectionService = new CollectionService(mongoInstance.client, mongoDbValidation, whiteList);
+
+const collectionController = new CollectionController(collectionService, fieldsConfigService);
 
 const routes = new Router();
-// routes.get('/', loginRequire, historic, collectionController.index);
-routes.post('/', loginRequire, permission('insert'), historic, collectionController.store.bind(collectionController));
+routes.get(
+  '/',
+  login.loginRequire.bind(login),
+  historic,
+  collectionController.index.bind(collectionController),
+);
+routes.post(
+  '/',
+  login.loginRequire.bind(login),
+  permission('insert'),
+  historic,
+  collectionController.store.bind(collectionController),
+);
 // routes.put('/', loginRequire, permission('edit'), historic, collectionController.update);
-// routes.delete('/', loginRequire, permission('delet'), historic, collectionController.delete);
+routes.delete(
+  '/',
+  login.loginRequire.bind(login),
+  permission('delet'),
+  historic,
+  collectionController.delete.bind(collectionController),
+);
 
 export default routes;

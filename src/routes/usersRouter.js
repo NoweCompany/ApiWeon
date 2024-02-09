@@ -1,18 +1,57 @@
 import { Router } from 'express';
 
-import userController from '../controllers/userController';
+import UserController from '../controllers/UserController';
 import permissionsController from '../controllers/permissionsController';
 import companyController from '../controllers/companyController';
 
+import UserSevice from '../services/UserService';
+
 import permission from '../middlewares/permission';
-import loginRequire from '../middlewares/loginRequire';
+import Login from '../middlewares/Login';
+
+import MongoDbValidation from '../database/MongoValidation';
+import { mongoInstance, sequelizeInstance } from '../database';
+
+import User from '../models/UserModels';
+import Company from '../models/CompanysModel';
+import Permission from '../models/PermissionsModel';
+
+const mongoDbValidation = new MongoDbValidation(mongoInstance.client);
+const login = new Login(mongoDbValidation);
+
+const userService = new UserSevice(sequelizeInstance.connection, User, Company, Permission);
+const userController = new UserController(userService);
 
 const routes = new Router();
 
-routes.get('/', loginRequire, userController.index);
-routes.post('/', loginRequire, permission('adm'), userController.store);
-routes.put('/', loginRequire, permission('adm'), userController.update);
-routes.delete('/:id', loginRequire, permission('adm'), userController.delete);
+routes.get(
+  '/',
+  login.loginRequire.bind(login),
+  userController.index.bind(userController),
+);
+// routes.get(
+//   '/:id',
+//   login.loginRequire.bind(login),
+//   userController.show.bind(userController),
+// );
+routes.post(
+  '/',
+  login.loginRequire.bind(login),
+  permission('adm'),
+  userController.store.bind(userController),
+);
+routes.put(
+  '/',
+  login.loginRequire.bind(login),
+  permission('adm'),
+  userController.update.bind(userController),
+);
+routes.delete(
+  '/:id',
+  login.loginRequire.bind(login),
+  permission('adm'),
+  userController.delete.bind(userController),
+);
 
 // rotas de permissões
 // routes.get('/permission', permissionsController.index);

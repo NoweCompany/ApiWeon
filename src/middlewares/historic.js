@@ -20,15 +20,11 @@ export default function historic(req, res, next) {
       method,
       registerChange: async () => {
         const { client } = mongoInstance;
-        const mongoValidation = new MongoValidation(company, client);
+        const mongoValidation = new MongoValidation(client);
 
-        const existDataBase = await mongoValidation.existDb(company);
-        if (!existDataBase) {
-          return res.status(400).json('O bancos de dados q ue vc esta tentando acessar não existe');
-        }
         const database = client.db(company);
 
-        const existCollection = await mongoValidation.existCollection('historic');
+        const existCollection = await mongoValidation.existCollection(company, 'historic');
         if (!existCollection) {
           await database.createCollection('historic', {
             validator: {

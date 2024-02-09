@@ -1,21 +1,22 @@
 class CollectionService {
-  constructor(clientMongoDb, mongoDbValidation) {
+  constructor(clientMongoDb, mongoDbValidation, whiteList) {
     this.client = clientMongoDb;
     this.mongoDbValidation = mongoDbValidation;
+    this.whiteList = whiteList;
+  }
+
+  async veryIfexistCollection(dataBaseName, collectionName) {
+    try {
+      const existCollection = await this.mongoDbValidation.existCollection(dataBaseName, collectionName);
+      return existCollection;
+    } catch (error) {
+      throw new Error('Um erro ocorreu durante a verificação de existencia de collection');
+    }
   }
 
   async createNewCollection(dataBaseName, collectionName) {
     try {
       const database = this.client.db(dataBaseName);
-
-      if (!collectionName) return { status: 400, msg: 'Envie os valores corretos' };
-
-      const collections = (await database.listCollections().toArray()).map((vl) => vl.name);
-
-      if (collections.includes(collectionName)) {
-        return { status: 400, msg: 'Essa predefinição já existe' };
-      }
-
       await database.createCollection(collectionName, {
         validator: {
           $jsonSchema: {
@@ -34,10 +35,33 @@ class CollectionService {
         validationAction: 'error',
       });
 
-      return { status: 200, msg: 'Predefinição criada com sucesso' };
+      return true;
     } catch (err) {
       console.log(err);
-      throw new Error(err);
+      throw new Error('Ocorreu um erro enquanto era realizado a criação de uma predefinição');
+    }
+  }
+
+  async listCollectionsInDatabase(databaseName) {
+    try {
+      const collections = (await this.client.db(databaseName).listCollections().toArray())
+        .filter((vl) => !vl.name.includes('dashboard_') && !this.whiteList.collections.includes(vl.name))
+        .map((vl) => vl.name);
+      return collections;
+    } catch (error) {
+      throw new Error(`Erro ao listar coleções: ${error.message}`);
+    }
+  }
+
+  async deleteCollection(company, collectionName) {
+    try {
+      const database = this.client.db(company);
+      if (this.whiteList.collections.includes(collectionName)) {
+        throw new Error();
+      }
+      await database.dropCollection(collectionName);
+    } catch (error) {
+      throw new Error(`Erro ao excluir coleção '${collectionName}'`);
     }
   }
 }

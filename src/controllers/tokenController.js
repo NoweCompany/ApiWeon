@@ -19,6 +19,13 @@ export default class TokenController {
         });
       }
 
+      const companyIsValid = await this.tokenService.verifyCompanyUser(user?.userCompany?.name);
+      if (!companyIsValid) {
+        return res.status(400).json({
+          error: 'Compania inválida, banco de dados não existe',
+        });
+      }
+
       const verifyPass = await this.tokenService.verifyUserPassword(user, password);
       if (!verifyPass) {
         return res.status(400).json({
@@ -29,7 +36,7 @@ export default class TokenController {
       delete user.password_hash;
       const userdata = {
         id: user.id,
-        email: user.id,
+        email: user.email,
         createdAt: user.createdAt,
         updatedAt: user.updatedAt,
         userCompany: user.userCompany,

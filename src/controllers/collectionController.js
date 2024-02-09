@@ -1,28 +1,38 @@
 import dotenv from 'dotenv';
 import MongoDb from '../database/MongoDbConnection';
 import whiteList from '../config/whiteList';
-import FieldsConfigService from '../services/fieldsconfigSevice';
 
 dotenv.config();
 
 class CollectionController {
-  constructor(collectionService) {
+  constructor(collectionService, fieldsConfigService) {
     this.collectionService = collectionService;
+    this.fieldsConfigService = fieldsConfigService;
   }
 
   // table
   async store(req, res) {
     try {
       const { collectionName } = req.body;
+      if (!collectionName) {
+        return res.status(400).json({
+          error: 'Envie os valores corretos',
+        });
+      }
       const dataBaseName = req.company;
 
-      const createdCollection = await this.collectionService.createNewCollection(dataBaseName, collectionName);
+      const existCollection = await this.collectionService.veryIfexistCollection(dataBaseName, collectionName);
+      if (existCollection) {
+        return res.status(400).json({
+          error: 'Já existe uma predefinição criada com esse nome',
+        });
+      }
 
-      const { status, msg } = createdCollection;
+      await this.collectionService.createNewCollection(dataBaseName, collectionName);
 
       await req.historic.registerChange();
 
-      return res.status(status).json(msg);
+      return res.status(200).json('Predefinição criada com sucesso');
     } catch (e) {
       return res.status(500).json({
         errors: e.message || 'Ocorreu um erro inesperado',
@@ -31,68 +41,46 @@ class CollectionController {
   }
 
   async index(req, res) {
-    const mongoDb = new MongoDb(req.company);
-    const connection = await mongoDb.connect();
-    const fieldConfig = new FieldsConfigService(mongoDb);
-
     try {
-      await mongoDb.existDb(req.company);
+      const collections = await this.collectionService.listCollectionsInDatabase(req.company);
+      const response = await Promise.all(collections.map(async (collectionName) => {
+        const fields = await this.fieldsConfigService.listFields(req.company, collectionName);
+        return { collectionName, fields };
+      }));
 
-      const response = [];
-      const database = connection.db(mongoDb.database);
-      const collections = (await database.listCollections().toArray()).reduce((ac, vl) => {
-        if (vl.name.includes('dashboard_') || whiteList.collections.includes(vl.name)) {
-          return ac;
-        }
-        ac.push(vl.name);
-        return ac;
-      }, []);
-
-      for (const collectionName of collections) {
-        const fields = await fieldConfig.listFields(req.company, collectionName);
-
-        const obj = { collectionName, fields };
-        response.push(obj);
-      }
-
-      await req.historic.registerChange(connection);
+      await req.historic.registerChange();
       if (response.length <= 0) return res.status(200).json('Não há tabelas criadas');
 
       return res.status(200).json({ response });
     } catch (e) {
+      console.log(e);
       return res.status(400).json({
-        errors: e.message || 'Ocorreu um erro inesperado',
+        errors: 'Ocorreu um erro inesperado',
       });
-    } finally {
-      mongoDb.close();
     }
   }
 
   async delete(req, res) {
-    const { collectionName } = req.body;
-
-    if (!collectionName) {
-      return res.status(400).json({
-        errors: 'Envie os valores corretos',
-      });
-    }
-
-    const mongoDb = new MongoDb(req.company);
-    const client = await mongoDb.connect();
-
     try {
-      await mongoDb.existDb(req.company);
+      const { collectionName } = req.body;
 
-      if (!await mongoDb.existCollection(collectionName) || whiteList.collections.includes(collectionName)) {
-        throw new Error('Essa collection não existe');
+      if (!collectionName) {
+        return res.status(400).json({
+          errors: 'Envie os valores corretos',
+        });
       }
 
-      const database = client.db(req.company);
-      await database.dropCollection(collectionName);
-      await database.collection('FieldsConfig').deleteMany({
-        collectionName,
-      });
-      await req.historic.registerChange(client);
+      const existCollection = await this.collectionService.veryIfexistCollection(req.company, collectionName);
+      if (!existCollection) {
+        return res.status(400).json({
+          error: 'Não existe nenhuma predefinição com esse nome',
+        });
+      }
+
+      await this.collectionService.deleteCollection(req.company, collectionName);
+      await this.fieldsConfigService.removeAllFieldsInCollection(req.company, collectionName);
+
+      await req.historic.registerChange();
 
       return res.status(200).json({
         success: 'Sua predefinição foi excluida com sucesso',
@@ -101,8 +89,6 @@ class CollectionController {
       return res.status(400).json({
         errors: e.message || 'Ocorreu um erro inesperado',
       });
-    } finally {
-      mongoDb.close();
     }
   }
 

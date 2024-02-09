@@ -1,13 +1,13 @@
 import dotenv from 'dotenv';
 
 import MongoDbConnection from './MongoDbConnection';
-import MysqlConnection from './MysqlConnection';
+import SequelizeConnection from './MysqlConnection';
 
 import conectionConfig from '../config/connectionConfig';
 
 dotenv.config();
 
-const mysqlInstance = new MysqlConnection(conectionConfig);
+const sequelizeInstance = new SequelizeConnection(conectionConfig);
 const mongoInstance = new MongoDbConnection(process.env.MONGO_CONNECTION_STRING);
 
 // const { client } = mongoInstance;
@@ -56,8 +56,8 @@ const mongoInstance = new MongoDbConnection(process.env.MONGO_CONNECTION_STRING)
 // });
 
 function testConnections() {
-  Promise.all([mysqlInstance.virifyConect(), mongoInstance.virifyConect()])
+  Promise.all([sequelizeInstance.virifyConect(), mongoInstance.virifyConect()])
     .then((result) => console.log(result))
     .catch((err) => console.log(err));
 }
-export { mysqlInstance, mongoInstance, testConnections };
+export { sequelizeInstance, mongoInstance, testConnections };
