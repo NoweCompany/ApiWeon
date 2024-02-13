@@ -9,7 +9,7 @@ import MongoDbValidation from '../database/MongoValidation';
 import { mongoInstance } from '../database';
 
 import CollectionService from '../services/CollectionService';
-import FieldsConfigService from '../services/FieldsconfigSevice';
+import FieldsConfigService from '../services/fieldsconfigSevice';
 
 import CollectionController from '../controllers/collectionController';
 

@@ -7,7 +7,7 @@ import Login from '../middlewares/Login';
 import FieldController from '../controllers/fieldController';
 
 import FieldService from '../services/fieldService';
-import FieldsConfigService from '../services/FieldsconfigSevice';
+import FieldsConfigService from '../services/fieldsconfigSevice';
 import convertTypeToBsonType from '../services/convertTypeToBsonType';
 
 import MongoDbValidation from '../database/MongoValidation';

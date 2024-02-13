@@ -1,6 +1,6 @@
 import { Router } from 'express';
 
-import UserController from '../controllers/UserController';
+import UserController from '../controllers/userController';
 import permissionsController from '../controllers/permissionsController';
 import companyController from '../controllers/companyController';
 
