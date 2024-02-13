@@ -16,7 +16,7 @@ import CollectionController from '../controllers/collectionController';
 const mongoDbValidation = new MongoDbValidation(mongoInstance.client);
 const login = new Login(mongoDbValidation);
 
-const fieldsConfigService = new FieldsConfigService(mongoDbValidation, mongoInstance.client);
+const fieldsConfigService = new FieldsConfigService(mongoInstance.client);
 const collectionService = new CollectionService(mongoInstance.client, mongoDbValidation, whiteList);
 
 const collectionController = new CollectionController(collectionService, fieldsConfigService);
@@ -35,7 +35,13 @@ routes.post(
   historic,
   collectionController.store.bind(collectionController),
 );
-// routes.put('/', loginRequire, permission('edit'), historic, collectionController.update);
+routes.put(
+  '/',
+  login.loginRequire.bind(login),
+  permission('edit'),
+  historic,
+  collectionController.update.bind(collectionController),
+);
 routes.delete(
   '/',
   login.loginRequire.bind(login),

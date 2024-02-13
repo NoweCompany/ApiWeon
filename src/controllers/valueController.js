@@ -1,74 +1,40 @@
-import {
-  ObjectId, Long,
-} from 'mongodb';
-import MongoDb from '../database/MongoDbConnection';
-import convertTypeToBsonType from '../services/convertTypeToBsonType';
-
-import whiteList from '../config/whiteList';
-
 class ValueController {
+  constructor(valueService, mongoDbValidation, whiteList) {
+    this.valueService = valueService;
+    this.mongoDbValidation = mongoDbValidation;
+    this.whiteList = whiteList;
+  }
+
   async store(req, res) {
-    const { collectionName, values } = req.body;
-
-    if (!collectionName || !values || values.length <= 0) {
-      return res.status(400).json({
-        errors: 'Valores inválidos',
-      });
-    }
-    const mongoDb = new MongoDb(req.company);
-    const client = await mongoDb.connect();
     try {
-      if (!await mongoDb.existDb(req.company)) throw new Error('O banco de dados que está tentando acessar não existe');
-      const database = client.db(req.company);
+      const { collectionName, values } = req.body;
 
-      if (!await mongoDb.existCollection(collectionName) || whiteList.collections.includes(collectionName)) {
-        throw new Error('Essa collection não existe');
-      }
-      const collection = database.collection(collectionName);
-
-      const rules = await collection.options();
-      const { properties, required } = rules.validator.$jsonSchema;
-
-      // This "for" passes through each value in the array
-      for (let i = 0; i < values.length; i += 1) {
-        const value = values[i];
-        if (Object.keys(value).length <= 0) {
-          throw new Error('Valores inválidos, todos objetos devem pelo menos ter uma chave válida de acordo com as regras de validação!');
-        }
-        value.default = 0;
-        value.active = true;
-        // verify if each values has a appropriate key
-        Object.keys(properties).forEach((key) => {
-          const ValueOfProperty = properties[key];
-          if (!Object.prototype.hasOwnProperty.call(value, key) && !required.includes(key)) {
-            value[key] = convertTypeToBsonType(ValueOfProperty.bsonType, null);
-          }
+      if (!collectionName || !values || values.length <= 0) {
+        return res.status(400).json({
+          error: 'Valores inválidos',
         });
-        // Tranform type of each field validation
-        for (const entriesOfValue of Object.entries(value)) {
-          const keyOfDocument = entriesOfValue[0];
-          const valueOfDocument = entriesOfValue[1];
-          const typeOfkeyValue = properties[keyOfDocument]?.bsonType;
-
-          if (!keyOfDocument) throw new Error(`Chave do documento enviado não é valida!${value}`);
-          if (!typeOfkeyValue) throw new Error('Tipo da chave de validação inválidas!');
-
-          value[keyOfDocument] = convertTypeToBsonType(typeOfkeyValue, valueOfDocument);
-        }
       }
-      await collection.insertMany(values);
-      await req.historic.registerChange(client);
+
+      const database = req.company;
+      if (!await this.mongoDbValidation.existCollection(database, collectionName)
+        || this.whiteList.collections.includes(collectionName)) {
+        return res.status(400).json({ error: 'Essa predefinição não existe' });
+      }
+
+      const formatedValues = await this.valueService.formateValueToInsert(database, collectionName, values);
+      if (formatedValues.errorMsg) return res.status(400).json({ error: formatedValues.errorMsg });
+      await this.valueService.insertValues(database, collectionName, formatedValues);
+
+      await req.historic.registerChange();
 
       return res.status(200).json({
         success: 'Cadastro bem sucedido',
       });
     } catch (e) {
       console.log(e);
-      return res.status(400).json({
-        errors: e.message || 'Ocorreu um erro inesperado',
+      return res.status(500).json({
+        error: e.message || 'Ocorreu um erro inesperado',
       });
-    } finally {
-      mongoDb.close();
     }
   }
 
@@ -78,144 +44,105 @@ class ValueController {
 
     if (!collectionName) {
       return res.status(400).json({
-        errors: 'Envie os valores corretos',
+        error: 'Envie os valores corretos',
       });
     }
 
-    const mongoDb = new MongoDb(req.company);
-    const client = await mongoDb.connect();
-
     try {
-      await mongoDb.existDb(req.company);
-
-      const database = client.db(req.company);
-
-      if (!await mongoDb.existCollection(collectionName) || whiteList.collections.includes(collectionName)) {
-        throw new Error('Essa collection não existe');
+      const database = req.company;
+      if (!await this.mongoDbValidation.existCollection(database, collectionName)
+        || this.whiteList.collections.includes(collectionName)) {
+        return res.status(400).json({ error: 'Essa predefinição não existe' });
       }
-      const collection = database.collection(collectionName);
 
-      let values = await collection.find({ active: true }).limit(Number(limit)).toArray();
-      values = values.map((doc) => {
-        let newDoc = { ...doc };
-        for (let key in newDoc) {
-          if (newDoc[key] instanceof Long) {
-            newDoc[key] = Number(newDoc[key]).toString();
-          }
-        }
+      const formatedValues = await this.valueService.listDocumentsActives(database, collectionName, limit);
+      const formaterListOfDocuments = this.valueService.formaterListOfDocuments(formatedValues);
 
-        const { default: defaultValue, active, ...rest } = newDoc;
-        return rest;
-      });
-
-      await req.historic.registerChange(client);
-      return res.status(200).json(values);
+      await req.historic.registerChange();
+      return res.status(200).json(formaterListOfDocuments);
     } catch (e) {
-      return res.status(400).json({
-        errors: e.message || 'Ocorreu um erro inesperado',
+      return res.status(500).json({
+        error: e.message || 'Ocorreu um erro inesperado',
       });
-    } finally {
-      mongoDb.close();
     }
   }
 
   async delete(req, res) {
-    const { id, collectionName } = req.params;
-    const permanent = req.params.permanent === 'true';
-
-    if (!collectionName || !id) {
-      return res.status(400).json({
-        errors: 'Valores inválidos',
-      });
-    }
-
-    const mongoDb = new MongoDb(req.company);
-    const client = await mongoDb.connect();
-
     try {
-      if (!await mongoDb.existCollection(collectionName) || whiteList.collections.includes(collectionName)) {
-        throw new Error('Essa collection não existe');
-      }
-      const collection = client.db(req.company).collection(collectionName);
+      const { id, collectionName } = req.params;
+      const permanent = req.params.permanent === 'true';
 
-      const existValue = await collection.findOne({ _id: new ObjectId(id) });
-      if (!existValue || (!existValue.active && !permanent)) {
-        throw new Error(`O registro com o ID '${id}' não está ativo na predefinição '${collectionName}`);
+      if (!collectionName || !id) {
+        return res.status(400).json({
+          error: 'Valores inválidos',
+        });
+      }
+
+      const database = req.company;
+      if (!await this.mongoDbValidation.existCollection(database, collectionName)
+        || this.whiteList.collections.includes(collectionName)) {
+        return res.status(400).json({ error: 'Essa predefinição não existe' });
       }
 
       if (permanent) {
-        await collection.deleteOne({ _id: new ObjectId(id) });
-        return res.json({
-          success: 'Deletado com sucesso.',
+        const result = await this.valueService.deleteValue(database, collectionName, id);
+        if (result.deletedCount <= 0) {
+          return res.status(400).json({
+            error: 'Nenhum documento foi econtrado',
+          });
+        }
+        await req.historic.registerChange();
+        return res.json(result);
+      }
+
+      const result = await this.valueService.moveValueToTrash(database, collectionName, id);
+      if (result.modifiedCount <= 0) {
+        return res.status(400).json({
+          error: 'Nenhum documento foi econtrado',
         });
       }
-      await collection.updateOne({ _id: new ObjectId(id) }, { $set: { active: false } });
-      await req.historic.registerChange(client);
-
-      return res.json({
-        success: 'Movido para lixeira.',
-      });
+      await req.historic.registerChange();
+      return res.status(200).json(result);
     } catch (e) {
-      return res.status(400).json({
-        errors: e.message || 'Ocorreu um erro inesperado',
+      return res.status(500).json({
+        error: e.message || 'Ocorreu um erro inesperado',
       });
     }
   }
 
   async update(req, res) {
-    const { id } = req.params;
-    const { collectionName, values } = req.body;
-
-    if (!collectionName || !values || !id) {
-      return res.status(400).json({
-        errors: 'Valores inválidos',
-      });
-    }
-
-    const mongoDb = new MongoDb(req.company);
-    const client = await mongoDb.connect();
-
     try {
-      if (!await mongoDb.existCollection(collectionName) || whiteList.collections.includes(collectionName)) {
-        throw new Error('Essa collection não existe');
+      const { id } = req.params;
+      const { collectionName, values } = req.body;
+
+      if (!collectionName || !values || Object.keys(values).length <= 0 || !id) {
+        return res.status(400).json({
+          error: 'Valores inválidos',
+        });
       }
-      const collection = client.db(req.company).collection(collectionName);
-
-      if (!await mongoDb.existValue(id, collectionName)) {
-        throw new Error(`O registro com o ID '${id}' não existe na tabela '${collectionName}`);
-      }
-
-      const rules = await collection.options();
-      const { properties } = rules.validator.$jsonSchema;
-
-      if (Object.keys(values).length <= 0) throw new Error('Valores inválidos, o objeto values deve pelo menos ter uma chave válida de acordo com as regras de validação!');
-
-      for (const entriesOfValue of Object.entries(values)) {
-        const keyOfDocument = entriesOfValue[0];
-        const valueOfDocument = entriesOfValue[1];
-        const typeOfkeyValue = properties[keyOfDocument]?.bsonType;
-
-        if (!typeOfkeyValue) throw new Error('Valores inválidos');
-        values[keyOfDocument] = convertTypeToBsonType(typeOfkeyValue, valueOfDocument);
-        if (values[keyOfDocument] === null) throw new Error('Valores inválidos, o número enviado ultrapassa o valor máximo de 15 caracteres');
+      const database = req.company;
+      if (!await this.mongoDbValidation.existCollection(database, collectionName)
+        || this.whiteList.collections.includes(collectionName)) {
+        return res.status(400).json({ error: 'Essa predefinição não existe' });
       }
 
-      await collection.updateOne(
-        { _id: new ObjectId(id) },
-        { $set: values },
-      );
+      if (!await this.mongoDbValidation.existValue(id, collectionName)) {
+        return res.status(400).json({ error: `O registro com o ID '${id}' não existe na tabela '${collectionName}` });
+      }
 
-      await req.historic.registerChange(client);
+      await this.valueService.updateDocument(database, collectionName, values, id);
+
+      await req.historic.registerChange();
 
       return res.json({
         success: 'alterado com sucesso',
       });
     } catch (e) {
-      return res.status(400).json({
-        errors: e.message || 'Ocorreu um erro inesperado',
+      return res.status(500).json({
+        error: e.message || 'Ocorreu um erro inesperado',
       });
     }
   }
 }
 
-export default new ValueController();
+export default ValueController;

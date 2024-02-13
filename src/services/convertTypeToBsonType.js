@@ -1,5 +1,5 @@
 import {
-  Long, Double, Int32,
+  Long, Double, Int32, ObjectId,
 } from 'mongodb';
 
 export default function convertTypeToBsonType(typeOfField, value) {
@@ -9,6 +9,8 @@ export default function convertTypeToBsonType(typeOfField, value) {
       return new Long(value);
     case 'date':
       return new Date(value);
+    case 'id':
+      return new ObjectId(value);
     case 'double':
       return new Double(value);
     case 'int':

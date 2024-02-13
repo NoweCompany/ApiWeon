@@ -22,7 +22,7 @@ class CollectionService {
           $jsonSchema: {
             bsonType: 'object',
             title: `${collectionName} rule`,
-            required: ['default', 'active'],
+            required: ['active'],
             properties: {
               active: {
                 bsonType: 'bool',
@@ -62,6 +62,28 @@ class CollectionService {
       await database.dropCollection(collectionName);
     } catch (error) {
       throw new Error(`Erro ao excluir coleção '${collectionName}'`);
+    }
+  }
+
+  isValidCollectionName(collectionName, newCollectionName) {
+    if (this.whiteList.collections.includes(collectionName)
+      || this.whiteList.collections.includes(newCollectionName)) {
+      return false;
+    }
+    return true;
+  }
+
+  async renameCollection(databaseName, collectionName, newCollectionName) {
+    try {
+      const databaseRef = this.client.db(databaseName);
+
+      await databaseRef.collection(collectionName).rename(newCollectionName);
+
+      console.log(`Coleção ${collectionName} renomeada para ${newCollectionName}`);
+
+      return true;
+    } catch (error) {
+      throw new Error(`Erro ao renomear tabela ${error.message}`);
     }
   }
 }

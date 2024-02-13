@@ -1,9 +1,3 @@
-import dotenv from 'dotenv';
-import MongoDb from '../database/MongoDbConnection';
-import whiteList from '../config/whiteList';
-
-dotenv.config();
-
 class CollectionController {
   constructor(collectionService, fieldsConfigService) {
     this.collectionService = collectionService;
@@ -101,27 +95,38 @@ class CollectionController {
       });
     }
 
-    const mongoDb = new MongoDb(req.company);
-    const client = await mongoDb.connect();
-
     try {
-      await mongoDb.existDb(req.company);
-
-      if (!await mongoDb.existCollection(collectionName) || whiteList.collections.includes(collectionName)) {
-        throw new Error('Essa predefinição não existe');
+      const isValidColleciton = await this.collectionService.isValidCollectionName(collectionName, newName);
+      if (!isValidColleciton) {
+        return res.status(400).json({
+          errors: 'Esses nome de collection não é validos',
+        });
       }
 
-      const database = client.db(req.company);
-      const collection = database.collection(collectionName);
+      const existCollection = await this.collectionService.veryIfexistCollection(req.company, collectionName);
+      if (!existCollection) {
+        return res.status(400).json({
+          error: 'Não existe nenhuma predefinição com esse nome',
+        });
+      }
 
-      await collection.rename(newName);
-      await req.historic.registerChange(client);
+      const existNewCollection = await this.collectionService.veryIfexistCollection(req.company, newName);
+      if (existNewCollection) {
+        return res.status(400).json({
+          error: 'Já existe uma predefinição com esse nome',
+        });
+      }
+
+      await this.fieldsConfigService.updateAllNamesOfCollection(req.company, collectionName, newName);
+      await this.collectionService.renameCollection(req.company, collectionName, newName);
+
+      await req.historic.registerChange();
 
       return res.status(200).json({
         success: 'Tabela renomeada com sucesso',
       });
     } catch (e) {
-      return res.status(400).json({
+      return res.status(500).json({
         errors: e.message || 'Ocorreu um erro inesperado',
       });
     }

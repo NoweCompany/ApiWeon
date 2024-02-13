@@ -34,14 +34,10 @@ class MongoValidation {
   async existValue(databaseName, collectionName, id) {
     const filter = { _id: new ObjectId(id) };
 
-    const conter = await this.client.db(databaseName).collection(collectionName).countDocuments(
+    const doc = await this.client.db(databaseName).collection(collectionName).find(
       filter,
-      (err) => {
-        throw new Error(err);
-      },
     );
-
-    if (conter <= 0) {
+    if (!doc) {
       return false;
     }
 

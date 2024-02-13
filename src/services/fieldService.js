@@ -1,76 +1,26 @@
 import { randomUUID } from 'node:crypto';
 
-import whiteList from '../config/whiteList';
-
 class FieldService {
-  constructor(mongoDb, convertTypeToBsonType, fieldconfigService) {
-    this.mongoDb = mongoDb;
+  constructor(clientMongoDb, convertTypeToBsonType) {
+    this.clientMongoDb = clientMongoDb;
     this.convertTypeToBsonType = convertTypeToBsonType;
-    this.fieldconfigService = fieldconfigService;
-    this.clientMongoDb = null;
   }
 
-  async setClient() {
+  async registerNewValidatorRule(database, collectionName, fieldName, uniqueName, options, rules) {
     try {
-      this.clientMongoDb = await this.mongoDb.connect();
-      return this.clientMongoDb;
-    } catch (error) {
-      console.log('Error ao setar client mongodb');
-      return { msg: 'Error ao setar client mongodb', status: 500 };
-    }
-  }
-
-  async listPropertiesOfSchemaValidation(databaseName, collectionName) {
-    try {
-      const list = await this.fieldconfigService.listFields(databaseName, collectionName);
-      if (list.msg && list.status) return list;
-
-      return {
-        collectionName,
-        fields: list,
-      };
-    } catch (error) {
-      console.error(`Erro ao listar schema validator: ${error.message}`);
-      throw new Error('Erro ao listar schema validator');
-    }
-  }
-
-  async registerNewValitorRule(
-    database,
-    collectionName,
-    fieldName,
-    options,
-  ) {
-    try {
-      await this.setClient();
       const databaseRef = this.clientMongoDb.db(database);
-      if (!(await this.mongoDb.existCollection(collectionName, database)) || whiteList.collections.includes(collectionName)) {
-        return { msg: 'Essa predefinição não existe', status: 400 };
-      }
-
-      let rule;
-      const rules = await databaseRef.collection(collectionName).options();
+      const { properties, required } = rules.validator.$jsonSchema;
 
       const propertieValidation = {
         bsonType: options.type,
         description: options.description,
       };
-
-      const originalName = `${fieldName}_${randomUUID()}`;
-
-      let { properties, required } = rules.validator.$jsonSchema;
-
-      for (const propertie in properties) {
-        if (propertie.split('_')[0] === fieldName) return { msg: 'Este campo já existe', status: 400 };
-      }
-
       if (options.required) {
-        required.push(originalName);
+        required.push(uniqueName);
       }
+      properties[uniqueName] = propertieValidation;
 
-      properties[originalName] = propertieValidation;
-
-      rule = {
+      const rule = {
         validator: {
           $jsonSchema: {
             bsonType: 'object',
@@ -87,24 +37,8 @@ class FieldService {
         collMod: collectionName,
         validator: rule.validator,
       };
-
       await databaseRef.command(command);
-      const valueDafaultForNewField = this.convertTypeToBsonType(options.type, null);
-
-      // Add new key in old documents
-      await databaseRef.collection(collectionName).updateMany(
-        { [originalName]: { $exists: false } },
-        { $set: { [originalName]: valueDafaultForNewField } },
-      );
-      await this.fieldconfigService.setFieldInConfig(
-        database,
-        collectionName,
-        originalName,
-        fieldName,
-        options.type,
-        options.required,
-        options.description,
-      );
+      await this.addNewFieldToExistingDocuments(databaseRef, collectionName, uniqueName, options);
 
       return null;
     } catch (error) {
@@ -113,23 +47,50 @@ class FieldService {
     }
   }
 
-  async removeFielOfVlidation(databaseName, collectionName, fieldName, originalName) {
+  async getCollectionValidatorRules(databaseName, collectionName) {
+    const rules = await this.clientMongoDb.db(databaseName).collection(collectionName).options();
+    return rules;
+  }
+
+  generateUniqueFieldName(fieldName) {
+    return `${fieldName}_${randomUUID()}`;
+  }
+
+  checkIfOrinalNameExists(properties, originalName) {
+    for (const prop in properties) {
+      if (prop === originalName) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  checkIfFieldExists(properties, fieldName) {
+    for (const prop in properties) {
+      if (prop.split('_')[0] === fieldName) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  async addNewFieldToExistingDocuments(databaseRef, collectionName, originalName, options) {
+    const valueDefaultForNewField = this.convertTypeToBsonType(options.type, null);
+    await databaseRef.collection(collectionName).updateMany(
+      { [originalName]: { $exists: false } },
+      { $set: { [originalName]: valueDefaultForNewField } },
+    );
+  }
+
+  async removeFielOfVlidation(databaseName, collectionName, fieldName, originalName, rules) {
     try {
-      await this.setClient();
       const databaseRef = this.clientMongoDb.db(databaseName);
 
-      if (!(await this.mongoDb.existCollection(collectionName, databaseName)) || whiteList.collections.includes(collectionName)) {
-        return { msg: 'Essa predefinição não existe', status: 400 };
-      }
-
       const collection = databaseRef.collection(collectionName);
-      const rules = await collection.options();
 
       let { required, properties } = rules.validator.$jsonSchema;
 
       if (required.includes(originalName)) required.splice(required.indexOf(originalName), 1);
-      if (!properties[originalName]) return { msg: `O campo ${fieldName} não existe`, status: 400 };
-
       delete properties[originalName];
 
       const validator = {
@@ -144,9 +105,6 @@ class FieldService {
         validator,
       };
 
-      const removed = await this.fieldconfigService.removeFieldInFieldsConfig(databaseName, collectionName, fieldName, originalName);
-      if (removed.msg && removed.status) return removed;
-
       await databaseRef.command(command);
       // Update all documents, to removing yours properties
       await collection.updateMany({}, { $unset: { [originalName]: '' } });
@@ -158,24 +116,16 @@ class FieldService {
     }
   }
 
-  async updateFieldOfvalidation(databaseName, collectionName, fieldName, originalName, newValues) {
+  async updateFieldOfvalidation(databaseName, collectionName, originalName, newValues) {
     try {
-      await this.setClient();
-      const databaseRef = this.clientMongoDb.db(databaseName);
-
       const {
         type, fieldRequired, description,
       } = newValues;
 
-      if (!(await this.mongoDb.existCollection(collectionName, databaseName)) || whiteList.collections.includes(collectionName)) {
-        return { msg: 'Essa predefinição não existe', status: 400 };
-      }
-
+      const databaseRef = this.clientMongoDb.db(databaseName);
       const collection = databaseRef.collection(collectionName);
 
       let { required, properties } = (await collection.options()).validator.$jsonSchema;
-
-      if (!properties?.[originalName]) return { msg: 'Esse campo não existe', status: 400 };
 
       const indice = required.indexOf(originalName);
 
@@ -192,7 +142,6 @@ class FieldService {
           bsonType: 'object',
           required,
           properties,
-
         },
       };
 
@@ -200,16 +149,6 @@ class FieldService {
         collMod: collectionName,
         validator,
       };
-
-      const updated = await this.fieldconfigService.updateFieldInFieldsConfig(
-        databaseName,
-        collectionName,
-        fieldName,
-        originalName,
-        newValues,
-      );
-
-      if (updated.msg && updated.status) return updated;
 
       await databaseRef.command(command);
       return null;

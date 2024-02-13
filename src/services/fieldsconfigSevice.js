@@ -1,10 +1,9 @@
 export default class FieldsConfig {
-  constructor(mongoDbValidation, client) {
-    this.mongoDbValidation = mongoDbValidation;
+  constructor(client) {
     this.client = client;
   }
 
-  async #createCollectionFieldConfig(databaseName) {
+  async createCollectionFieldConfig(databaseName) {
     try {
       const valitationSchema = {
         validator: {
@@ -74,21 +73,8 @@ export default class FieldsConfig {
     fieldIsRequired,
     description,
   ) {
-    console.log(this.client);
-    if (
-      typeof collectionName !== 'string'
-      || typeof originalNameField !== 'string'
-      || typeof typeField !== 'string'
-      || typeof fieldIsRequired !== 'boolean'
-      || typeof description !== 'string'
-    ) {
-      return { msg: 'Uma ou mais variáveis são inválidas', status: 400 };
-    }
     try {
       const databseRef = this.client.db(databaseName);
-      const existCollection = await this.mongoDbValidation.existCollection(collectionName, databaseName);
-
-      if (!existCollection) await this.#createCollectionFieldConfig();
       const collection = databseRef.collection('FieldsConfig');
 
       // const existField = await collection.findOne({
@@ -115,12 +101,6 @@ export default class FieldsConfig {
   }
 
   async listFields(databaseName, collectionName) {
-    if (
-      typeof databaseName !== 'string'
-      || typeof collectionName !== 'string'
-    ) {
-      return { msg: 'Uma ou mais variáveis são inválidas', status: 400 };
-    }
     try {
       const databaseRef = this.client.db(databaseName);
 
@@ -147,64 +127,25 @@ export default class FieldsConfig {
   async updateFieldInFieldsConfig(
     databaseName,
     collectionName,
-    fieldName,
     originalName,
     newValues,
   ) {
     const {
       newFieldName, type, fieldRequired, description,
     } = newValues;
-
-    if (
-      typeof databaseName !== 'string'
-      || typeof collectionName !== 'string'
-      || typeof fieldName !== 'string'
-      || typeof newFieldName !== 'string'
-      || typeof type !== 'string'
-      || typeof fieldRequired !== 'boolean'
-      || typeof originalName !== 'string'
-      || typeof description !== 'string'
-    ) {
-      return { msg: 'Uma ou mais variáveis são inválidas', status: 400 };
-    }
     try {
       const databaseRef = this.client.db(databaseName);
-
-      const existCollection = await this.mongoDbValidation.existCollection('FieldsConfig', databaseName);
-      if (!existCollection) return { msg: 'Não há nenhum campo cadastrado nessa collection', status: 400 };
-
       const collectionRef = databaseRef.collection('FieldsConfig');
 
-      const existField = await collectionRef.find(
-        {
-          $and: [
-            { 'fieldsEspecifications.currentName': fieldName },
-            { 'fieldsEspecifications.originalName': originalName },
-          ],
-        },
-      ).toArray();
-
-      console.log(existField.length);
-      if (existField.length <= 0) return { msg: `Não há nenhum campo com o nome ${fieldName}`, status: 400 };
-
       await collectionRef.updateOne(
-        {
-          $and: [
-            { collectionName },
-            { 'fieldsEspecifications.currentName': fieldName },
-          ],
-        },
+        { collectionName, 'fieldsEspecifications.originalName': originalName },
         {
           $set: {
-            collectionName,
-            fieldsEspecifications: {
-              originalName,
-              currentName: newFieldName,
-              type,
-              required: fieldRequired,
-              description,
-              allNames: [newFieldName],
-            },
+            'fieldsEspecifications.currentName': newFieldName,
+            'fieldsEspecifications.type': type,
+            'fieldsEspecifications.required': fieldRequired,
+            'fieldsEspecifications.description': description,
+            'fieldsEspecifications.allNames': [newFieldName],
           },
         },
       );
@@ -213,6 +154,20 @@ export default class FieldsConfig {
     } catch (error) {
       console.log(error);
       throw new Error('Erro ao atualizar campos de uma collection FieldsConfig');
+    }
+  }
+
+  async checkIfFieldCurrentExistsInFieldsConfig(databaseName, currentName) {
+    try {
+      const databaseRef = this.client.db(databaseName);
+      const collectionRef = databaseRef.collection('FieldsConfig');
+
+      const existField = await collectionRef.findOne({
+        'fieldsEspecifications.currentName': currentName,
+      });
+      return existField;
+    } catch (error) {
+      throw new Error('Erro ao verificar se campo exite em fields config');
     }
   }
 
@@ -233,33 +188,9 @@ export default class FieldsConfig {
     fieldName,
     originalName,
   ) {
-    if (
-      typeof databaseName !== 'string'
-      || typeof collectionName !== 'string'
-      || typeof fieldName !== 'string'
-      || typeof originalName !== 'string'
-    ) {
-      return { msg: 'Uma ou mais variáveis são inválidas', status: 400 };
-    }
     try {
       const databaseRef = this.client.db(databaseName);
-
-      const existCollection = await this.mongoDbValidation.existCollection('FieldsConfig', databaseName);
-      if (!existCollection) return { msg: 'Não há nenhum campo cadastrado nessa collection', status: 400 };
-
       const collectionRef = databaseRef.collection('FieldsConfig');
-
-      const existField = await collectionRef.find(
-        {
-          $and: [
-            { 'fieldsEspecifications.currentName': fieldName },
-            { 'fieldsEspecifications.originalName': originalName },
-          ],
-        },
-      ).toArray();
-
-      console.log(existField.length);
-      if (existField.length <= 0) return { msg: `Não há nenhum campo com o nome ${fieldName}`, status: 400 };
 
       await collectionRef.deleteOne(
         {
@@ -274,7 +205,26 @@ export default class FieldsConfig {
       return true;
     } catch (error) {
       console.log(error);
-      throw new Error('Erro ao atualizar campos de uma collection FieldsConfig');
+      throw new Error('Erro ao excluir campos de uma collection FieldsConfig');
+    }
+  }
+
+  async updateAllNamesOfCollection(databaseName, collectionName, newCollectionName) {
+    try {
+      const databaseRef = this.client.db(databaseName);
+      const collection = databaseRef.collection('FieldsConfig');
+
+      const result = await collection.updateMany(
+        { collectionName },
+        { $set: { collectionName: newCollectionName } },
+      );
+
+      console.log(`${result.modifiedCount} documentos atualizados na coleção ${collectionName}`);
+
+      return true;
+    } catch (error) {
+      console.error('Erro ao atualizar os nomes da coleção:', error);
+      return false;
     }
   }
 }
