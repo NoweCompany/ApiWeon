@@ -1,10 +1,10 @@
 import { Router } from 'express';
 
-import loginRequire from '../middlewares/loginRequire';
-import historic from '../middlewares/historic';
-import permission from '../middlewares/permission';
+import loginRequire from '../middlewares/loginRequire.js';
+import historic from '../middlewares/historic.js';
+import permission from '../middlewares/permission.js';
 
-import dashboardController from '../controllers/dashboardController';
+import dashboardController from '../controllers/dashboardController.js';
 
 const routes = new Router();
 routes.get('/', loginRequire, historic, dashboardController.index);

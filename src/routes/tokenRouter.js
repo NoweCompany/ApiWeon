@@ -1,12 +1,12 @@
 import { Router } from 'express';
 
-import TokenController from '../controllers/tokenController';
-import TokenService from '../services/TokenService';
+import TokenController from '../controllers/tokenController.js';
+import TokenService from '../services/TokenService.js';
 
-import User from '../models/UserModels';
+import User from '../models/UserModels.js';
 
-import MongoDbValidation from '../database/MongoValidation';
-import { mongoInstance } from '../database';
+import MongoDbValidation from '../database/MongoValidation.js';
+import { mongoInstance } from '../database/index.js';
 
 const mongoDbValidation = new MongoDbValidation(mongoInstance.client);
 

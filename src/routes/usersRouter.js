@@ -1,20 +1,20 @@
 import { Router } from 'express';
 
-import UserController from '../controllers/UserController';
-import permissionsController from '../controllers/permissionsController';
-import companyController from '../controllers/companyController';
+import UserController from '../controllers/UserController.js';
+import permissionsController from '../controllers/permissionsController.js';
+import companyController from '../controllers/companyController.js';
 
-import UserSevice from '../services/UserService';
+import UserSevice from '../services/UserService.js';
 
-import permission from '../middlewares/permission';
-import Login from '../middlewares/Login';
+import permission from '../middlewares/permission.js';
+import Login from '../middlewares/Login.js';
 
-import MongoDbValidation from '../database/MongoValidation';
-import { mongoInstance, sequelizeInstance } from '../database';
+import MongoDbValidation from '../database/MongoValidation.js';
+import { mongoInstance, sequelizeInstance } from '../database/index.js';
 
-import User from '../models/UserModels';
-import Company from '../models/CompanysModel';
-import Permission from '../models/PermissionsModel';
+import User from '../models/UserModels.js';
+import Company from '../models/CompanysModel.js';
+import Permission from '../models/PermissionsModel.js';
 
 const mongoDbValidation = new MongoDbValidation(mongoInstance.client);
 const login = new Login(mongoDbValidation);

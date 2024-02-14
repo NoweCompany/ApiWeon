@@ -1,10 +1,10 @@
 import { Router } from 'express';
 
-import loginRequire from '../middlewares/loginRequire';
-import uploadController from '../controllers/uploadController';
-import historic from '../middlewares/historic';
+import loginRequire from '../middlewares/loginRequire.js';
+import uploadController from '../controllers/uploadController.js';
+import historic from '../middlewares/historic.js';
 
-import permission from '../middlewares/permission';
+import permission from '../middlewares/permission.js';
 
 const routes = new Router();
 

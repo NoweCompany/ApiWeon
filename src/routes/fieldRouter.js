@@ -1,18 +1,18 @@
 import { Router } from 'express';
 
-import historic from '../middlewares/historic';
-import permission from '../middlewares/permission';
-import Login from '../middlewares/Login';
+import historic from '../middlewares/historic.js';
+import permission from '../middlewares/permission.js';
+import Login from '../middlewares/Login.js';
 
-import FieldController from '../controllers/fieldController';
+import FieldController from '../controllers/fieldController.js';
 
-import FieldService from '../services/fieldService';
-import FieldsConfigService from '../services/FieldsconfigSevice';
-import convertTypeToBsonType from '../services/convertTypeToBsonType';
+import FieldService from '../services/fieldService.js';
+import FieldsConfigService from '../services/FieldsconfigSevice.js';
+import convertTypeToBsonType from '../utils/convertTypeToBsonType.js';
 
-import MongoDbValidation from '../database/MongoValidation';
-import { mongoInstance } from '../database';
-import whiteList from '../config/whiteList';
+import MongoDbValidation from '../database/MongoValidation.js';
+import { mongoInstance } from '../database/index.js';
+import whiteList from '../config/whiteList.js';
 
 const routes = new Router();
 

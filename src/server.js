@@ -1,5 +1,5 @@
-import app from './app';
-import { testConnections } from './database';
+import app from './app.js';
+import { testConnections } from './database/index.js';
 
 testConnections();
 

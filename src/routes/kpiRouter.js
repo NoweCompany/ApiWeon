@@ -1,9 +1,9 @@
 import { Router } from 'express';
 
-import loginRequire from '../middlewares/loginRequire';
-import permission from '../middlewares/permission';
-import historic from '../middlewares/historic';
-import kpiController from '../controllers/kpiController';
+import loginRequire from '../middlewares/loginRequire.js';
+import permission from '../middlewares/permission.js';
+import historic from '../middlewares/historic.js';
+import kpiController from '../controllers/kpiController.js';
 
 const routes = new Router();
 routes.post('/', loginRequire, permission('insert'), historic, kpiController.store);

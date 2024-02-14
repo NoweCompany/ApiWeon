@@ -84,6 +84,10 @@ class ValueController {
         return res.status(400).json({ error: 'Essa predefinição não existe' });
       }
 
+      if (!await this.mongoDbValidation.existValue(database, collectionName, id)) {
+        return res.status(400).json({ error: `O registro com o ID '${id}' não existe na tabela '${collectionName}` });
+      }
+
       if (permanent) {
         const result = await this.valueService.deleteValue(database, collectionName, id);
         if (result.deletedCount <= 0) {
@@ -104,6 +108,7 @@ class ValueController {
       await req.historic.registerChange();
       return res.status(200).json(result);
     } catch (e) {
+      console.log(e);
       return res.status(500).json({
         error: e.message || 'Ocorreu um erro inesperado',
       });
@@ -126,7 +131,7 @@ class ValueController {
         return res.status(400).json({ error: 'Essa predefinição não existe' });
       }
 
-      if (!await this.mongoDbValidation.existValue(id, collectionName)) {
+      if (!await this.mongoDbValidation.existValue(database, collectionName, id)) {
         return res.status(400).json({ error: `O registro com o ID '${id}' não existe na tabela '${collectionName}` });
       }
 

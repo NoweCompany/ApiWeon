@@ -1,5 +1,5 @@
-import User from '../models/UserModels';
-import Permission from '../models/PermissionsModel';
+import User from '../models/UserModels.js';
+import Permission from '../models/PermissionsModel.js';
 
 class PermissionController {
   async store(req, res) {

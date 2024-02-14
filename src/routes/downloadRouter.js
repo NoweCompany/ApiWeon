@@ -1,11 +1,11 @@
 import { Router } from 'express';
 
-import loginRequire from '../middlewares/loginRequire';
-import downloadController from '../controllers/downloadController';
-import historic from '../middlewares/historic';
-import removeFilePath from '../middlewares/removeFilePath';
+import loginRequire from '../middlewares/loginRequire.js';
+import downloadController from '../controllers/downloadController.js';
+import historic from '../middlewares/historic.js';
+import removeFilePath from '../middlewares/removeFilePath.js';
 
-import permission from '../middlewares/permission';
+import permission from '../middlewares/permission.js';
 
 const routes = new Router();
 

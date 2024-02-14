@@ -1,5 +1,5 @@
 import jwt from 'jsonwebtoken';
-import User from '../models/UserModels';
+import User from '../models/UserModels.js';
 
 export default class Login {
   constructor(mongoValidation) {

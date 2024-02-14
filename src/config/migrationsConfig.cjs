@@ -1,8 +1,6 @@
-import dotenv from 'dotenv';
+require('dotenv').config();
 
-dotenv.config();
-
-const config = {
+module.exports = {
   dialect: 'mysql',
   host: process.env.DATABASE_HOST,
   port: process.env.DATABASE_PORT,
@@ -21,5 +19,3 @@ const config = {
     idle: 10000,
   },
 };
-
-export default config;

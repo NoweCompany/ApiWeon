@@ -1,7 +1,7 @@
 import { Sequelize } from 'sequelize';
-import User from '../models/UserModels';
-import Permission from '../models/PermissionsModel';
-import Company from '../models/CompanysModel';
+import User from '../models/UserModels.js';
+import Permission from '../models/PermissionsModel.js';
+import Company from '../models/CompanysModel.js';
 
 class MysqlConnection {
   constructor(connectionConfig) {

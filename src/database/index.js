@@ -1,9 +1,9 @@
 import dotenv from 'dotenv';
 
-import MongoDbConnection from './MongoDbConnection';
-import SequelizeConnection from './MysqlConnection';
+import MongoDbConnection from './MongoDbConnection.js';
+import SequelizeConnection from './MysqlConnection.js';
 
-import conectionConfig from '../config/connectionConfig';
+import conectionConfig from '../config/connectionConfig.js';
 
 dotenv.config();
 

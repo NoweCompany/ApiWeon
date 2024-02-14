@@ -1,17 +1,17 @@
 import { Router } from 'express';
 
-import historic from '../middlewares/historic';
-import permission from '../middlewares/permission';
-import Login from '../middlewares/Login';
+import historic from '../middlewares/historic.js';
+import permission from '../middlewares/permission.js';
+import Login from '../middlewares/Login.js';
 
-import whiteList from '../config/whiteList';
+import whiteList from '../config/whiteList.js';
 
-import MongoDbValidation from '../database/MongoValidation';
-import { mongoInstance } from '../database';
+import MongoDbValidation from '../database/MongoValidation.js';
+import { mongoInstance } from '../database/index.js';
 
-import ValueService from '../services/ValueService';
-import ValueController from '../controllers/valueController';
-import convertTypeToBsonType from '../services/convertTypeToBsonType';
+import ValueService from '../services/ValueService.js';
+import ValueController from '../controllers/valueController.js';
+import convertTypeToBsonType from '../utils/convertTypeToBsonType.js';
 
 const mongoDbValidation = new MongoDbValidation(mongoInstance.client);
 const login = new Login(mongoDbValidation);

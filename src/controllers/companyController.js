@@ -1,6 +1,6 @@
 /* eslint-disable camelcase */
-import Company from '../models/CompanysModel';
-import User from '../models/UserModels';
+import Company from '../models/CompanysModel.js';
+import User from '../models/UserModels.js';
 
 class CompanyController {
   async store(req, res) {
