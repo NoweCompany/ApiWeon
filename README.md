@@ -41,10 +41,7 @@ This api was developed with the intention of providing services to our Front-End
     npx sequelize db:migrate
 ```
 
-4. run the build and start project
-```
-    npm run build
-```
+4. Start project
 ```
     npm run start
 ```
