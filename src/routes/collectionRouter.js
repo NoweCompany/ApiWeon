@@ -17,9 +17,9 @@ const mongoDbValidation = new MongoDbValidation(mongoInstance.client);
 const login = new Login(mongoDbValidation);
 
 const fieldsConfigService = new FieldsConfigService(mongoInstance.client);
-const collectionService = new CollectionService(mongoInstance.client, mongoDbValidation, whiteList);
+const collectionService = new CollectionService(mongoInstance.client, whiteList);
 
-const collectionController = new CollectionController(collectionService, fieldsConfigService);
+const collectionController = new CollectionController(mongoDbValidation, collectionService, fieldsConfigService);
 
 const routes = new Router();
 routes.get(

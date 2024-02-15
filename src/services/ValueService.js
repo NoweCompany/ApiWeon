@@ -59,6 +59,31 @@ export default class ValueService {
     }
   }
 
+  async listAllDocuments(databaseName, collectionName, limit) {
+    try {
+      const databaseRef = this.client.db(databaseName);
+      const collection = databaseRef.collection(collectionName);
+      const values = await collection.find({}).limit(Number(limit)).toArray();
+
+      return values;
+    } catch (error) {
+      throw new Error('Error ao lsitar documentos em uma predefinição');
+    }
+  }
+
+  async listDocumentById(databaseName, collectionName, id) {
+    try {
+      const databaseRef = this.client.db(databaseName);
+      const collection = databaseRef.collection(collectionName);
+      const document = await collection.findOne({ _id: this.convertTypeToBsonType('id', id) });
+
+      return document;
+    } catch (error) {
+      throw new Error('Erro ao listar documento por ID');
+    }
+  }
+
+
   async listDocumentsActives(databaseName, collectionName, limit) {
     try {
       const databaseRef = this.client.db(databaseName);

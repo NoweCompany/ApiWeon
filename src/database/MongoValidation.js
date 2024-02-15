@@ -37,6 +37,7 @@ class MongoValidation {
     const doc = await this.client.db(databaseName).collection(collectionName).find(
       filter,
     ).toArray();
+    console.log(doc);
     if (doc.length <= 0) {
       return false;
     }

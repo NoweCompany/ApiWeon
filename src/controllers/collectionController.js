@@ -1,5 +1,6 @@
 class CollectionController {
-  constructor(collectionService, fieldsConfigService) {
+  constructor(mongoDbValidation, collectionService, fieldsConfigService) {
+    this.mongoDbValidation = mongoDbValidation;
     this.collectionService = collectionService;
     this.fieldsConfigService = fieldsConfigService;
   }
@@ -15,10 +16,10 @@ class CollectionController {
       }
       const dataBaseName = req.company;
 
-      const existCollection = await this.collectionService.veryIfexistCollection(dataBaseName, collectionName);
-      if (existCollection) {
+      const existCollection = await this.mongoDbValidation.existCollection(databaseName, collectionName);
+      if (!existCollection) {
         return res.status(400).json({
-          error: 'Já existe uma predefinição criada com esse nome',
+          error: 'Não existe nenhuma predefinição com esse nome',
         });
       }
 
@@ -64,7 +65,7 @@ class CollectionController {
         });
       }
 
-      const existCollection = await this.collectionService.veryIfexistCollection(req.company, collectionName);
+      const existCollection = await this.mongoDbValidation.existCollection(databaseName, collectionName);
       if (!existCollection) {
         return res.status(400).json({
           error: 'Não existe nenhuma predefinição com esse nome',
@@ -103,7 +104,7 @@ class CollectionController {
         });
       }
 
-      const existCollection = await this.collectionService.veryIfexistCollection(req.company, collectionName);
+      const existCollection = await this.mongoDbValidation.existCollection(databaseName, collectionName);
       if (!existCollection) {
         return res.status(400).json({
           error: 'Não existe nenhuma predefinição com esse nome',

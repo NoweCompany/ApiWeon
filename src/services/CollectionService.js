@@ -1,17 +1,7 @@
 class CollectionService {
-  constructor(clientMongoDb, mongoDbValidation, whiteList) {
+  constructor(clientMongoDb, whiteList) {
     this.client = clientMongoDb;
-    this.mongoDbValidation = mongoDbValidation;
     this.whiteList = whiteList;
-  }
-
-  async veryIfexistCollection(dataBaseName, collectionName) {
-    try {
-      const existCollection = await this.mongoDbValidation.existCollection(dataBaseName, collectionName);
-      return existCollection;
-    } catch (error) {
-      throw new Error('Um erro ocorreu durante a verificação de existencia de collection');
-    }
   }
 
   async createNewCollection(dataBaseName, collectionName) {
