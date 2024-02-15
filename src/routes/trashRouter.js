@@ -40,7 +40,7 @@ routes.get(
 routes.put(
   '/:id/:collectionName',
   login.loginRequire.bind(login),
-  permission('edit'),
+  permission('adm'),
   historic,
   trashController.restore.bind(trashController),
 );

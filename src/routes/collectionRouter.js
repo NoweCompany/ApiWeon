@@ -31,21 +31,21 @@ routes.get(
 routes.post(
   '/',
   login.loginRequire.bind(login),
-  permission('insert'),
+  permission('adm'),
   historic,
   collectionController.store.bind(collectionController),
 );
 routes.put(
   '/',
   login.loginRequire.bind(login),
-  permission('edit'),
+  permission('adm'),
   historic,
   collectionController.update.bind(collectionController),
 );
 routes.delete(
   '/',
   login.loginRequire.bind(login),
-  permission('delet'),
+  permission('adm'),
   historic,
   collectionController.delete.bind(collectionController),
 );

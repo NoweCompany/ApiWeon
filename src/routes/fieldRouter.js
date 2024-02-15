@@ -32,21 +32,21 @@ routes.get(
 routes.post(
   '/',
   login.loginRequire.bind(login),
-  permission('insert'),
+  permission('adm'),
   historic,
   fieldController.store.bind(fieldController),
 );
 routes.put(
   '/',
   login.loginRequire.bind(login),
-  permission('edit'),
+  permission('adm'),
   historic,
   fieldController.update.bind(fieldController),
 );
 routes.delete(
   '/:collectionName/:fieldName/:originalName',
   login.loginRequire.bind(login),
-  permission('delet'),
+  permission('adm'),
   historic,
   fieldController.delete.bind(fieldController),
 );

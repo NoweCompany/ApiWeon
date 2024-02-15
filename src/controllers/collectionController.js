@@ -16,10 +16,10 @@ class CollectionController {
       }
       const dataBaseName = req.company;
 
-      const existCollection = await this.mongoDbValidation.existCollection(databaseName, collectionName);
-      if (!existCollection) {
+      const existCollection = await this.mongoDbValidation.existCollection(dataBaseName, collectionName);
+      if (existCollection) {
         return res.status(400).json({
-          error: 'Não existe nenhuma predefinição com esse nome',
+          error: 'Já existe uma predefinição com esse nome',
         });
       }
 
@@ -37,7 +37,9 @@ class CollectionController {
 
   async index(req, res) {
     try {
-      const collections = await this.collectionService.listCollectionsInDatabase(req.company);
+      const query = { name: { $not: /^dashboard_/ } }
+      const collections = await this.collectionService.listCollectionsInDatabase(req.company, query);
+
       const response = await Promise.all(collections.map(async (collectionName) => {
         const fields = await this.fieldsConfigService.listFields(req.company, collectionName);
         return { collectionName, fields };
@@ -65,6 +67,7 @@ class CollectionController {
         });
       }
 
+      const databaseName = req.company;
       const existCollection = await this.mongoDbValidation.existCollection(databaseName, collectionName);
       if (!existCollection) {
         return res.status(400).json({
@@ -104,6 +107,7 @@ class CollectionController {
         });
       }
 
+      const databaseName = req.company;
       const existCollection = await this.mongoDbValidation.existCollection(databaseName, collectionName);
       if (!existCollection) {
         return res.status(400).json({
@@ -111,15 +115,8 @@ class CollectionController {
         });
       }
 
-      const existNewCollection = await this.collectionService.veryIfexistCollection(req.company, newName);
-      if (existNewCollection) {
-        return res.status(400).json({
-          error: 'Já existe uma predefinição com esse nome',
-        });
-      }
-
-      await this.fieldsConfigService.updateAllNamesOfCollection(req.company, collectionName, newName);
-      await this.collectionService.renameCollection(req.company, collectionName, newName);
+      await this.fieldsConfigService.updateAllNamesOfCollection(databaseName, collectionName, newName);
+      await this.collectionService.renameCollection(databaseName, collectionName, newName);
 
       await req.historic.registerChange();
 

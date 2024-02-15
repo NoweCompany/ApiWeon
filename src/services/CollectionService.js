@@ -38,8 +38,14 @@ class CollectionService {
 
   async listCollectionsInDatabase(databaseName, query) {
     try {
-      const collections = (await this.client.db(databaseName).listCollections(query).toArray()).map(cl => cl.name)
-      return collections;
+      const collections = await this.client.db(databaseName).listCollections(query).toArray();
+      const collectionNames = collections.reduce((ac, cl) => {
+        if (!this.whiteList.collections.includes(cl.name)) {
+          ac.push(cl.name);
+        }
+        return ac;
+      }, []);
+      return collectionNames;
     } catch (error) {
       throw new Error(`Erro ao listar coleções: ${error.message}`);
     }
