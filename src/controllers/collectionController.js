@@ -30,7 +30,7 @@ class CollectionController {
       return res.status(200).json('Predefinição criada com sucesso');
     } catch (e) {
       return res.status(500).json({
-        errors: e.message || 'Ocorreu um erro inesperado',
+        error: e.message || 'Ocorreu um erro inesperado',
       });
     }
   }
@@ -52,7 +52,7 @@ class CollectionController {
     } catch (e) {
       console.log(e);
       return res.status(400).json({
-        errors: 'Ocorreu um erro inesperado',
+        error: 'Ocorreu um erro inesperado',
       });
     }
   }
@@ -63,7 +63,7 @@ class CollectionController {
 
       if (!collectionName) {
         return res.status(400).json({
-          errors: 'Envie os valores corretos',
+          error: 'Envie os valores corretos',
         });
       }
 
@@ -85,7 +85,7 @@ class CollectionController {
       });
     } catch (e) {
       return res.status(400).json({
-        errors: e.message || 'Ocorreu um erro inesperado',
+        error: e.message || 'Ocorreu um erro inesperado',
       });
     }
   }
@@ -95,7 +95,7 @@ class CollectionController {
 
     if (!collectionName || !newName) {
       return res.status(400).json({
-        errors: 'Envie os valores corretos',
+        error: 'Envie os valores corretos',
       });
     }
 
@@ -103,7 +103,7 @@ class CollectionController {
       const isValidColleciton = await this.collectionService.isValidCollectionName(collectionName, newName);
       if (!isValidColleciton) {
         return res.status(400).json({
-          errors: 'Esses nome de collection não é validos',
+          error: 'Esses nome de collection não é validos',
         });
       }
 
@@ -125,7 +125,7 @@ class CollectionController {
       });
     } catch (e) {
       return res.status(500).json({
-        errors: e.message || 'Ocorreu um erro inesperado',
+        error: e.message || 'Ocorreu um erro inesperado',
       });
     }
   }

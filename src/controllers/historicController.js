@@ -13,7 +13,7 @@ export default class HistoricController {
       return res.status(200).json({ registers });
     } catch (e) {
       return res.status(500).json({
-        errors: e.message || 'Ocorreu um erro inesperado',
+        error: e.message || 'Ocorreu um erro inesperado',
       });
     }
   }
@@ -32,7 +32,7 @@ export default class HistoricController {
     } catch (e) {
       console.log(e);
       return res.status(500).json({
-        errors: e.message || 'Ocorreu um erro inesperado',
+        error: e.message || 'Ocorreu um erro inesperado',
       });
     }
   }

@@ -7,13 +7,13 @@ class CompanyController {
     try {
       let { name } = req.body;
       const { company_user_id } = req.params;
-      if (!name || !company_user_id) return res.status(400).json({ errors: 'dados invalidos' });
+      if (!name || !company_user_id) return res.status(400).json({ error: 'dados invalidos' });
 
       const user = await User.findOne({ where: { id: company_user_id } });
 
       if (!user) {
         return res.status(400).json({
-          errors: 'Usuário não existe',
+          error: 'Usuário não existe',
         });
       }
 
@@ -21,7 +21,7 @@ class CompanyController {
 
       if (company) {
         return res.status(400).json({
-          errors: 'este usuario já possui uma compania',
+          error: 'este usuario já possui uma compania',
         });
       }
 
@@ -32,7 +32,7 @@ class CompanyController {
       return res.status(200).json({ companyCreate });
     } catch (e) {
       return res.status(400).json({
-        errors: 'Ocorreu um erro inesperado',
+        error: 'Ocorreu um erro inesperado',
       });
     }
   }
@@ -49,7 +49,7 @@ class CompanyController {
       return res.status(200).json(users);
     } catch (e) {
       return res.status(400).json({
-        errors: 'Ocorreu um erro inesperado',
+        error: 'Ocorreu um erro inesperado',
       });
     }
   }

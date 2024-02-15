@@ -8,7 +8,7 @@ class PermissionController {
 
       if (!userId) {
         return res.status(400).json({
-          errors: 'Id inválido',
+          error: 'Id inválido',
         });
       }
 
@@ -23,7 +23,7 @@ class PermissionController {
 
       if (!user) {
         return res.status(400).json({
-          errors: 'Usuário não existe',
+          error: 'Usuário não existe',
         });
       }
 
@@ -31,7 +31,7 @@ class PermissionController {
 
       if (permission) {
         return res.status(400).json({
-          errors: 'este usuario já possui uma permissão',
+          error: 'este usuario já possui uma permissão',
         });
       }
 
@@ -47,7 +47,7 @@ class PermissionController {
       return res.status(200).json({ newPermission });
     } catch (e) {
       return res.status(400).json({
-        errors: 'Ocorreu um erro inesperado',
+        error: 'Ocorreu um erro inesperado',
       });
     }
   }
@@ -58,7 +58,7 @@ class PermissionController {
 
       if (!userId) {
         return res.status(400).json({
-          errors: 'Id inválido',
+          error: 'Id inválido',
         });
       }
 
@@ -73,7 +73,7 @@ class PermissionController {
       return res.status(200).json(users);
     } catch (e) {
       return res.status(400).json({
-        errors: 'Ocorreu um erro inesperado',
+        error: 'Ocorreu um erro inesperado',
       });
     }
   }
@@ -91,7 +91,7 @@ class PermissionController {
       return res.status(200).json(users);
     } catch (e) {
       return res.status(400).json({
-        errors: 'Ocorreu um erro inesperado',
+        error: 'Ocorreu um erro inesperado',
       });
     }
   }
@@ -102,7 +102,7 @@ class PermissionController {
 
       if (!userId) {
         return res.status(400).json({
-          errors: 'Id inválido',
+          error: 'Id inválido',
         });
       }
 
@@ -117,7 +117,7 @@ class PermissionController {
 
       if (!user) {
         return res.status(400).json({
-          errors: 'Usuário não existe',
+          error: 'Usuário não existe',
         });
       }
 
@@ -125,7 +125,7 @@ class PermissionController {
 
       if (!permission) {
         return res.status(400).json({
-          errors: 'este usuario não possui uma permissão',
+          error: 'este usuario não possui uma permissão',
         });
       }
 
@@ -139,7 +139,7 @@ class PermissionController {
       return res.status(200).json({ newPermission });
     } catch (e) {
       return res.status(400).json({
-        errors: 'Ocorreu um erro inesperado',
+        error: 'Ocorreu um erro inesperado',
       });
     }
   }

@@ -64,7 +64,7 @@ class UploadController {
 
       bb.on('error', (error) => {
         res.status(400).json({
-          errors: error,
+          error: error,
         });
       });
 
@@ -81,7 +81,7 @@ class UploadController {
         const allowedFileTypes = ['application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', 'application/json'];
         if (!allowedFileTypes.includes(mimeType)) {
           return res.status(400).json({
-            errors: 'Tipo de arquivo não suportado. Envie um arquivo xlsx ou json.',
+            error: 'Tipo de arquivo não suportado. Envie um arquivo xlsx ou json.',
           });
         }
 
@@ -115,7 +115,7 @@ class UploadController {
             });
           } catch (error) {
             res.status(400).json({
-              errors: error.message,
+              error: error.message,
             });
           }
         });

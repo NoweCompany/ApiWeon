@@ -12,7 +12,7 @@ class FieldController {
 
     if (!collectionName) {
       return res.status(400).json({
-        errors: 'Envie os valores corretos',
+        error: 'Envie os valores corretos',
       });
     }
 
@@ -34,7 +34,7 @@ class FieldController {
     } catch (e) {
       console.log(e);
       return res.status(500).json({
-        errors: e.message || 'Ocorreu um erro inesperado',
+        error: e.message || 'Ocorreu um erro inesperado',
       });
     }
   }
@@ -44,7 +44,7 @@ class FieldController {
 
     if (!collectionName || !options || !fieldName) {
       return res.status(400).json({
-        errors: 'Valores inválidos',
+        error: 'Valores inválidos',
       });
     }
 
@@ -88,7 +88,7 @@ class FieldController {
     } catch (e) {
       console.log(e);
       return res.status(400).json({
-        errors: e.message || 'Ocorreu um erro inesperado',
+        error: e.message || 'Ocorreu um erro inesperado',
       });
     }
   }
@@ -99,7 +99,7 @@ class FieldController {
 
       if (!fieldName || !collectionName) {
         return res.status(400).json({
-          errors: 'Valor inválido',
+          error: 'Valor inválido',
         });
       }
 
@@ -111,7 +111,7 @@ class FieldController {
 
       if (this.whiteList.fields.includes(fieldName)) {
         return res.status(400).json({
-          errors: 'Esse campo não exite',
+          error: 'Esse campo não exite',
         });
       }
       const rules = await this.fieldService.getCollectionValidatorRules(database, collectionName);
@@ -147,7 +147,7 @@ class FieldController {
     } catch (e) {
       console.log(e);
       return res.status(400).json({
-        errors: e.message || 'Ocorreu um erro inesperado',
+        error: e.message || 'Ocorreu um erro inesperado',
       });
     }
   }
@@ -173,7 +173,7 @@ class FieldController {
 
       if (!collectionName || !originalName || !newValues) {
         return res.status(400).json({
-          errors: 'Valores inválidos',
+          error: 'Valores inválidos',
         });
       }
 
@@ -214,7 +214,7 @@ class FieldController {
     } catch (e) {
       console.log(e);
       return res.status(500).json({
-        errors: e.message || 'Ocorreu um erro inesperado',
+        error: e.message || 'Ocorreu um erro inesperado',
       });
     }
   }

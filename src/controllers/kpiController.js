@@ -16,7 +16,7 @@ export default class DashboardController {
 
       if (!dashboardName || !name || !preset || !numberField || !typekpi) {
         return res.status(400).json({
-          errors: 'Envie os valores corretos',
+          error: 'Envie os valores corretos',
         });
       }
 
@@ -31,7 +31,7 @@ export default class DashboardController {
 
       if (!Object.keys(typesKPIsAllowed).includes(typekpi))
         return res.status(400).json({
-          errors: `O tipo de indicador '${typekpi}' não é permitido!`,
+          error: `O tipo de indicador '${typekpi}' não é permitido!`,
         });
 
       const rulesOfpreset = await this.fieldsConfigService.listFields(databasename, preset);
@@ -39,7 +39,7 @@ export default class DashboardController {
       const numberFieldExist = this.kpiService.verifyIFIsValidRules(rulesOfpreset, numberField)
       if (!numberFieldExist) {
         return res.status(400).json({
-          errors: 'O campo selecionado não existem',
+          error: 'O campo selecionado não existem',
         });;
       }
 
@@ -58,7 +58,7 @@ export default class DashboardController {
       return res.status(200).json(true);
     } catch (e) {
       return res.status(500).json({
-        errors: e.message || 'Ocorreu um erro inesperado',
+        error: e.message || 'Ocorreu um erro inesperado',
       });
     }
   }

@@ -18,7 +18,7 @@ export default class TrashController {
     } catch (e) {
       console.log(e);
       return res.status(500).json({
-        errors: e.message || 'Ocorreu um erro inesperado',
+        error: e.message || 'Ocorreu um erro inesperado',
       });
     }
   }
@@ -30,7 +30,7 @@ export default class TrashController {
 
       if (!collectionName) {
         return res.status(400).json({
-          errors: 'Envie os valores corretos',
+          error: 'Envie os valores corretos',
         });
       }
 
@@ -48,7 +48,7 @@ export default class TrashController {
       return res.status(200).json(listItemsInTrash);
     } catch (e) {
       return res.status(500).json({
-        errors: e.message || 'Ocorreu um erro inesperado',
+        error: e.message || 'Ocorreu um erro inesperado',
       });
     }
   }
@@ -59,7 +59,7 @@ export default class TrashController {
 
       if (!collectionName || !id) {
         return res.status(400).json({
-          errors: 'Valores inválidos',
+          error: 'Valores inválidos',
         });
       }
       const databaseName = req.company;
@@ -82,7 +82,7 @@ export default class TrashController {
       });
     } catch (e) {
       return res.status(400).json({
-        errors: e.message || 'Ocorreu um erro inesperado',
+        error: e.message || 'Ocorreu um erro inesperado',
       });
     }
   }

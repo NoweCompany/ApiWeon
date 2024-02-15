@@ -18,7 +18,7 @@ class DownloadController {
 
       if (!existDb) {
         return res.status(400).json({
-          errors: 'O bancos de dados q ue vc esta tentando acessar não existe',
+          error: 'O bancos de dados q ue vc esta tentando acessar não existe',
         });
       }
 
@@ -27,7 +27,7 @@ class DownloadController {
 
       if (!collectionName || !collectionExist) {
         return res.status(400).json({
-          errors: 'Envie os valores corretos',
+          error: 'Envie os valores corretos',
         });
       }
 
@@ -72,7 +72,7 @@ class DownloadController {
       next();
     } catch (e) {
       return res.status(400).json({
-        errors: 'Ocorreu um erro inesperado',
+        error: 'Ocorreu um erro inesperado',
       });
     } finally {
       mongoDb.close();
@@ -88,7 +88,7 @@ class DownloadController {
 
       if (!collectionName) {
         return res.status(400).json({
-          errors: 'Envie os valores corretos',
+          error: 'Envie os valores corretos',
         });
       }
 
@@ -96,7 +96,7 @@ class DownloadController {
 
       if (!collectionExist) {
         return res.status(400).json({
-          errors: `A predefinição ${collectionName} não existe`,
+          error: `A predefinição ${collectionName} não existe`,
         });
       }
 

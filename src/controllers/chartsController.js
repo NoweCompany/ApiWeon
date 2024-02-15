@@ -17,12 +17,12 @@ export default class ChartsController {
 
       if (!dashboardName || !name || !preset || !textField || !numberField || !typeChart) {
         return res.status(400).json({
-          errors: 'Envie os valores corretos',
+          error: 'Envie os valores corretos',
         });
       }
       if (!Object.keys(typesChartsAllowed).includes(typeChart)) {
         return res.status(400).json({
-          errors: `O tipo de gráfico '${typeChart}' não é permitido!`,
+          error: `O tipo de gráfico '${typeChart}' não é permitido!`,
         });
       }
 
@@ -40,7 +40,7 @@ export default class ChartsController {
       const isValidRules = this.chartsService.verifyIFIsValidRules(rulesOfpreset, textField, numberField)
       if (!isValidRules) {
         return res.status(400).json({
-          errors: 'Os parametros enviados não satisfagem as regras de negocio, textField deve ser um campo tipo string e numberField deve ser um campo do tipo long ou double',
+          error: 'Os parametros enviados não satisfagem as regras de negocio, textField deve ser um campo tipo string e numberField deve ser um campo do tipo long ou double',
         });;
       }
 
@@ -61,7 +61,7 @@ export default class ChartsController {
       return res.status(200).json(true);
     } catch (e) {
       return res.status(500).json({
-        errors: e.message || 'Ocorreu um erro inesperado',
+        error: e.message || 'Ocorreu um erro inesperado',
       });
     }
   }
