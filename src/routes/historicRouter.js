@@ -15,7 +15,7 @@ const mongoDbValidation = new MongoDbValidation(mongoInstance.client);
 const login = new Login(mongoDbValidation);
 
 const valueService = new ValueService(mongoInstance.client, convertTypeToBsonType);
-const historicController = new HistoricController(mongoDbValidation, valueService);
+const historicController = new HistoricController(valueService);
 
 const routes = new Router();
 

@@ -103,7 +103,6 @@ export default class FieldsConfig {
   async listFields(databaseName, collectionName) {
     try {
       const databaseRef = this.client.db(databaseName);
-
       const collectionRef = databaseRef.collection('FieldsConfig');
 
       const list = await collectionRef.find({ collectionName }).toArray();

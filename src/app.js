@@ -13,9 +13,9 @@ import valueRoutes from './routes/valueRouter.js';
 import trashRouter from './routes/trashRouter.js';
 // import downloadRouter from './routes/downloadRouter.js';
 // import uploadRouter from './routes/uploadRouter.js';
-// import chartsRouter from './routes/chartsRouter.js';
-// import kpiRouter from './routes/kpiRouter.js';
-// import dashboardRouter from './routes/dashboardRouter.js';
+import chartsRouter from './routes/chartsRouter.js';
+import kpiRouter from './routes/kpiRouter.js';
+import dashboardRouter from './routes/dashboardRouter.js';
 import historicRouter from './routes/historicRouter.js';
 
 dotenv.config();
@@ -44,9 +44,9 @@ class App {
     this.app.use('/trash', trashRouter);
     // this.app.use('/download', downloadRouter);
     // this.app.use('/upload', uploadRouter);
-    // this.app.use('/dashboard', dashboardRouter);
-    // this.app.use('/chart', chartsRouter);
-    // this.app.use('/kpi', kpiRouter);
+    this.app.use('/dashboard', dashboardRouter);
+    this.app.use('/chart', chartsRouter);
+    this.app.use('/kpi', kpiRouter);
     this.app.use('/historic', historicRouter);
   }
 }

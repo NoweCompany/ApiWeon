@@ -4,10 +4,12 @@ class CollectionService {
     this.whiteList = whiteList;
   }
 
-  async createNewCollection(dataBaseName, collectionName) {
+  async createNewCollection(dataBaseName, collectionName, schemaValidator) {
     try {
       const database = this.client.db(dataBaseName);
-      await database.createCollection(collectionName, {
+
+      let schema = schemaValidator
+      if (!schema) schema = {
         validator: {
           $jsonSchema: {
             bsonType: 'object',
@@ -23,7 +25,9 @@ class CollectionService {
         },
         validationLevel: 'moderate',
         validationAction: 'error',
-      });
+      }
+
+      await database.createCollection(collectionName, schema);
 
       return true;
     } catch (err) {
@@ -32,11 +36,9 @@ class CollectionService {
     }
   }
 
-  async listCollectionsInDatabase(databaseName) {
+  async listCollectionsInDatabase(databaseName, query) {
     try {
-      const collections = (await this.client.db(databaseName).listCollections().toArray())
-        .filter((vl) => !vl.name.includes('dashboard_') && !this.whiteList.collections.includes(vl.name))
-        .map((vl) => vl.name);
+      const collections = (await this.client.db(databaseName).listCollections(query).toArray()).map(cl => cl.name)
       return collections;
     } catch (error) {
       throw new Error(`Erro ao listar coleções: ${error.message}`);

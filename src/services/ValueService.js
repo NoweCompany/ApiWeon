@@ -59,15 +59,35 @@ export default class ValueService {
     }
   }
 
-  async listAllDocuments(databaseName, collectionName, limit) {
+  async listAllDocuments(databaseName, collectionName, limit, query) {
     try {
       const databaseRef = this.client.db(databaseName);
       const collection = databaseRef.collection(collectionName);
-      const values = await collection.find({}).limit(Number(limit)).toArray();
+      const values = await collection.find(query).limit(Number(limit)).toArray();
 
       return values;
     } catch (error) {
       throw new Error('Error ao lsitar documentos em uma predefinição');
+    }
+  }
+
+  async listAllDocumentsInCollections(databaseName, collectionNames, limit, query) {
+    try {
+      const databaseRef = this.client.db(databaseName);
+      const results = [];
+
+      for (const collectionName of collectionNames) {
+        const collection = databaseRef.collection(collectionName);
+        const documents = await collection.find(query).limit(Number(limit)).toArray();
+        results.push({
+          collectionName,
+          values: documents
+        });
+      }
+
+      return results;
+    } catch (error) {
+      throw new Error('Erro ao listar documentos em uma ou mais coleções');
     }
   }
 
@@ -82,7 +102,6 @@ export default class ValueService {
       throw new Error('Erro ao listar documento por ID');
     }
   }
-
 
   async listDocumentsActives(databaseName, collectionName, limit) {
     try {

@@ -10,6 +10,14 @@ dotenv.config();
 const sequelizeInstance = new SequelizeConnection(conectionConfig);
 const mongoInstance = new MongoDbConnection(process.env.MONGO_CONNECTION_STRING);
 
+function testConnections() {
+  Promise.all([sequelizeInstance.virifyConect(), mongoInstance.virifyConect()])
+    .then((result) => console.log(result))
+    .catch((err) => console.log(err));
+}
+
+export { sequelizeInstance, mongoInstance, testConnections };
+
 // const { client } = mongoInstance;
 // client.on('connectionPoolCreated', (event) => {
 //   console.log('Pool de conexões criado:', event);
@@ -55,9 +63,4 @@ const mongoInstance = new MongoDbConnection(process.env.MONGO_CONNECTION_STRING)
 //   console.log('Pool de conexões limpo');
 // });
 
-function testConnections() {
-  Promise.all([sequelizeInstance.virifyConect(), mongoInstance.virifyConect()])
-    .then((result) => console.log(result))
-    .catch((err) => console.log(err));
-}
-export { sequelizeInstance, mongoInstance, testConnections };
+

@@ -1,12 +1,12 @@
-export default class TableController {
-  constructor(mongoDbValidation, valueService) {
-    this.mongoDbValidation = mongoDbValidation
+export default class HistoricController {
+  constructor(valueService) {
     this.valueService = valueService
   }
   async index(req, res) {
     try {
       const limit = req.params.limit || 100
       const databaseName = req.company
+
       const registers = await this.valueService.listAllDocuments(databaseName, 'historic', limit)
       if (registers.length <= 0) return res.status(200).json({ msg: 'Não há registros.' });
 
