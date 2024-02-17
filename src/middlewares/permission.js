@@ -1,4 +1,4 @@
-import Permission from '../models/PermissionsModel';
+import Permission from '../models/PermissionsModel.js';
 
 export default (permissionRequired) => async (req, res, next) => {
   const existPermission = await Permission.checksPermission(req.userId, permissionRequired);

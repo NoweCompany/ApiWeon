@@ -1,25 +1,25 @@
 import { Router } from 'express';
-import whiteList from '../config/whiteList';
+import whiteList from '../config/whiteList.js';
 
-import Login from '../middlewares/Login';
-import historic from '../middlewares/historic';
-import permission from '../middlewares/permission';
+import Login from '../middlewares/Login.js';
+import historic from '../middlewares/historic.js';
+import permission from '../middlewares/permission.js';
 
-import MongoDbValidation from '../database/MongoValidation';
-import { mongoInstance } from '../database';
+import MongoDbValidation from '../database/MongoValidation.js';
+import { mongoInstance } from '../database/index.js';
 
-import CollectionService from '../services/CollectionService';
-import FieldsConfigService from '../services/fieldsconfigSevice';
+import CollectionService from '../services/CollectionService.js';
+import FieldsConfigService from '../services/FieldsconfigSevice.js';
 
-import CollectionController from '../controllers/collectionController';
+import CollectionController from '../controllers/collectionController.js';
 
 const mongoDbValidation = new MongoDbValidation(mongoInstance.client);
 const login = new Login(mongoDbValidation);
 
 const fieldsConfigService = new FieldsConfigService(mongoInstance.client);
-const collectionService = new CollectionService(mongoInstance.client, mongoDbValidation, whiteList);
+const collectionService = new CollectionService(mongoInstance.client, whiteList);
 
-const collectionController = new CollectionController(collectionService, fieldsConfigService);
+const collectionController = new CollectionController(mongoDbValidation, collectionService, fieldsConfigService);
 
 const routes = new Router();
 routes.get(
@@ -31,21 +31,21 @@ routes.get(
 routes.post(
   '/',
   login.loginRequire.bind(login),
-  permission('insert'),
+  permission('adm'),
   historic,
   collectionController.store.bind(collectionController),
 );
 routes.put(
   '/',
   login.loginRequire.bind(login),
-  permission('edit'),
+  permission('adm'),
   historic,
   collectionController.update.bind(collectionController),
 );
 routes.delete(
   '/',
   login.loginRequire.bind(login),
-  permission('delet'),
+  permission('adm'),
   historic,
   collectionController.delete.bind(collectionController),
 );

@@ -1,12 +1,30 @@
 import { Router } from 'express';
 
-import loginRequire from '../middlewares/loginRequire';
-import historic from '../middlewares/historic';
-import permission from '../middlewares/permission';
+import Login from '../middlewares/Login.js';
+import historic from '../middlewares/historic.js';
+import permission from '../middlewares/permission.js';
 
-import chartsController from '../controllers/chartsController';
+import MongoDbValidation from '../database/MongoValidation.js';
+import { mongoInstance } from '../database/index.js';
+
+import FieldsConfigService from '../services/FieldsconfigSevice.js';
+import ChartsService from '../services/ChartsService.js';
+
+import ChartsController from '../controllers/chartsController.js';
+
+const mongoDbValidation = new MongoDbValidation(mongoInstance.client);
+const login = new Login(mongoDbValidation);
+
+const fieldsConfigService = new FieldsConfigService(mongoInstance.client);
+const chartsService = new ChartsService(mongoInstance.client);
+const chartsController = new ChartsController(mongoDbValidation, chartsService, fieldsConfigService);
 
 const routes = new Router();
-routes.post('/', loginRequire, permission('insert'), historic, chartsController.store);
+routes.post(
+  '/',
+  login.loginRequire.bind(login),
+  permission('insert'),
+  historic,
+  chartsController.store.bind(chartsController));
 
 export default routes;

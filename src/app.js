@@ -3,20 +3,20 @@ import express from 'express';
 import helmet from 'helmet';
 import path from 'path';
 
-import configCors from './middlewares/configCors';
+import configCors from './middlewares/configCors.js';
 
-import usersRoutes from './routes/usersRouter';
-import collectionRouter from './routes/collectionRouter';
-import tokenRoutes from './routes/tokenRouter';
-import fieldRoutes from './routes/fieldRouter';
-import valueRoutes from './routes/valueRouter';
-// import trashRouter from './routes/trashRouter';
-// import downloadRouter from './routes/downloadRouter';
-// import uploadRouter from './routes/uploadRouter';
-// import chartsRouter from './routes/chartsRouter';
-// import kpiRouter from './routes/kpiRouter';
-// import dashboardRouter from './routes/dashboardRouter';
-// import historicRouter from './routes/historicRouter';
+import usersRoutes from './routes/usersRouter.js';
+import collectionRouter from './routes/collectionRouter.js';
+import tokenRoutes from './routes/tokenRouter.js';
+import fieldRoutes from './routes/fieldRouter.js';
+import valueRoutes from './routes/valueRouter.js';
+import trashRouter from './routes/trashRouter.js';
+import downloadRouter from './routes/downloadRouter.js';
+import uploadRouter from './routes/uploadRouter.js';
+import chartsRouter from './routes/chartsRouter.js';
+import kpiRouter from './routes/kpiRouter.js';
+import dashboardRouter from './routes/dashboardRouter.js';
+import historicRouter from './routes/historicRouter.js';
 
 dotenv.config();
 
@@ -30,7 +30,7 @@ class App {
   middlewares() {
     this.app.use(helmet());
     this.app.use(configCors);
-    this.app.use(express.static(path.resolve(__dirname, '..', 'uploads')));
+    this.app.use(express.static(path.resolve('uploads')));
     this.app.use(express.urlencoded({ extended: true }));
     this.app.use(express.json());
   }
@@ -41,13 +41,13 @@ class App {
     this.app.use('/token', tokenRoutes);
     this.app.use('/field', fieldRoutes);
     this.app.use('/value', valueRoutes);
-    // this.app.use('/trash', trashRouter);
-    // this.app.use('/download', downloadRouter);
-    // this.app.use('/upload', uploadRouter);
-    // this.app.use('/dashboard', dashboardRouter);
-    // this.app.use('/chart', chartsRouter);
-    // this.app.use('/kpi', kpiRouter);
-    // this.app.use('/historic', historicRouter);
+    this.app.use('/trash', trashRouter);
+    this.app.use('/download', downloadRouter);
+    this.app.use('/upload', uploadRouter);
+    this.app.use('/dashboard', dashboardRouter);
+    this.app.use('/chart', chartsRouter);
+    this.app.use('/kpi', kpiRouter);
+    this.app.use('/historic', historicRouter);
   }
 }
 

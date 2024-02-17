@@ -1,40 +1,13 @@
-import MongoDb from '../database/MongoDbConnection';
-import whiteList from '../config/whiteList';
-
-async function getRules(dbName, collectionName, client) {
-  const collection = client.db(dbName).collection(collectionName);
-
-  const rule = await collection.options();
-  let fields = [];
-
-  if (Object.keys(rule).length <= 0) {
-    throw new Error('Não há nenhum campo criado');
-  }
-
-  const { properties } = rule.validator.$jsonSchema;
-  const { required } = rule.validator.$jsonSchema;
-
-  fields = (Object.entries(properties)).reduce((accumulator, field) => {
-    if (field[0] === 'default' || field[0] === 'active') return accumulator;
-    const objFields = {};
-    [objFields.key] = field;
-    objFields.type = field[1].bsonType;
-    objFields.required = !!(required.includes(field[0]));
-    accumulator.push(objFields);
-    return accumulator;
-  }, []);
-
-  return { collectionName, fields };
-}
-
 const typesChartsAllowed = {
   pie: 'Setor', line: 'Linha', area: 'Area', column: 'Coluna',
 };
-
-class DashboardController {
+export default class ChartsController {
+  constructor(mongoDbValidation, chartsService, fieldsConfigService) {
+    this.mongoDbValidation = mongoDbValidation
+    this.chartsService = chartsService
+    this.fieldsConfigService = fieldsConfigService
+  }
   async store(req, res) {
-    const mongoDb = new MongoDb(req.company);
-    const client = await mongoDb.connect();
     try {
       const {
         dashboardName, name, preset, textField, numberField, typeChart,
@@ -42,50 +15,54 @@ class DashboardController {
 
       const collectionNameFormated = `dashboard_${(dashboardName.toLowerCase().trim()).split(' ').join('_')}`;
 
-      if (!dashboardName || !name || !preset || !textField || !numberField || !typeChart) throw new Error('Envie os valores corretos');
-      if (!Object.keys(typesChartsAllowed).includes(typeChart)) throw new Error(`O tipo de gráfico '${typeChart}' não é permitido!`);
-      if (!await mongoDb.existCollection(collectionNameFormated)) throw new Error(`O dashboard '${dashboardName}' não existe!`);
-      if (!await mongoDb.existCollection(preset) || whiteList.collections.includes(preset)) throw new Error('Essa predefinição não existe!');
-
-      const rulesOfpreset = await getRules(req.company, preset, client);
-
-      let textFieldExist = false;
-      let numberFieldExist = false;
-      for (let field of rulesOfpreset.fields) {
-        const fieldName = field.key;
-        const fieldType = field.type;
-
-        if (fieldName === textField) textFieldExist = true;
-        if (fieldName === numberField) numberFieldExist = true;
-
-        if (fieldName === textField && fieldType !== 'string') {
-          throw new Error('A propriedade textField deve ser um campo de tipo string');
-        }
-        if (fieldName === numberField && (fieldType !== 'int' && fieldType !== 'double')) {
-          throw new Error('A propriedade numberField deve ser um campo de tipo double ou int');
-        }
+      if (!dashboardName || !name || !preset || !textField || !numberField || !typeChart) {
+        return res.status(400).json({
+          error: 'Envie os valores corretos',
+        });
       }
-      if (!textFieldExist || !numberFieldExist) {
-        throw new Error('Os campos selecionados não existem');
+      if (!Object.keys(typesChartsAllowed).includes(typeChart)) {
+        return res.status(400).json({
+          error: `O tipo de gráfico '${typeChart}' não é permitido!`,
+        });
       }
 
-      // insere os dados do body
-      const dataBase = client.db(req.company);
+      const databasename = req.company
+      const existDash = await this.mongoDbValidation.existCollection(databasename, collectionNameFormated)
+      const existCollection = await this.mongoDbValidation.existCollection(databasename, preset)
 
-      await dataBase.collection(collectionNameFormated).insertOne({
-        title: 'chart', name, preset, textField, numberField, typeChart,
-      });
+      if (!existCollection || !existDash) {
+        return res.status(400).json({ error: 'Essa collection não existe' });
+      }
 
-      await req.historic.registerChange(client);
+      //rules
+      const rulesOfpreset = await this.fieldsConfigService.listFields(databasename, preset);
+
+      const isValidRules = this.chartsService.verifyIFIsValidRules(rulesOfpreset, textField, numberField)
+      if (!isValidRules) {
+        return res.status(400).json({
+          error: 'Os parametros enviados não satisfagem as regras de negocio, textField deve ser um campo tipo string e numberField deve ser um campo do tipo long ou double',
+        });;
+      }
+
+      const originalNameTextField = this.chartsService.fieldOriginalName(rulesOfpreset, textField)
+      const originalNameNumberField = this.chartsService.fieldOriginalName(rulesOfpreset, numberField)
+      const dataInsert = {
+        title: 'chart',
+        name,
+        preset,
+        textField: originalNameTextField,
+        numberField: originalNameNumberField,
+        typeChart,
+      }
+
+      await this.chartsService.registerChart(databasename, collectionNameFormated, dataInsert)
+
+      await req.historic.registerChange();
       return res.status(200).json(true);
     } catch (e) {
-      return res.status(400).json({
-        errors: e.message || 'Ocorreu um erro inesperado',
+      return res.status(500).json({
+        error: e.message || 'Ocorreu um erro inesperado',
       });
-    } finally {
-      mongoDb.close();
     }
   }
 }
-
-export default new DashboardController();

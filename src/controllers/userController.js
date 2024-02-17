@@ -8,12 +8,12 @@ export default class UserController {
       const { email, password, permission } = req.body;
 
       if (!this.userService.validateInput(email, password)) {
-        return res.status(400).json({ errors: 'Valores inválidos' });
+        return res.status(400).json({ error: 'Valores inválidos' });
       }
 
       const emailExists = await this.userService.isEmailInUse(email);
       if (emailExists) {
-        return res.status(400).json({ errors: 'Um usuário com esse email já existe' });
+        return res.status(400).json({ error: 'Um usuário com esse email já existe' });
       }
 
       const userId = await this.userService.createUser(email, password, req.company, permission);
@@ -22,7 +22,7 @@ export default class UserController {
       return res.json({ userId, ...req.body });
     } catch (error) {
       console.log(error);
-      return res.status(500).json({ errors: 'Ocorreu um erro inesperado' });
+      return res.status(500).json({ error: 'Ocorreu um erro inesperado' });
     }
   }
 
@@ -32,7 +32,7 @@ export default class UserController {
       const users = await this.userService.findUsersByCompany(req.company);
       return res.json(users);
     } catch (error) {
-      return res.status(500).json({ errors: 'Ocorreu um erro inesperado' });
+      return res.status(500).json({ error: 'Ocorreu um erro inesperado' });
     }
   }
 
@@ -40,7 +40,7 @@ export default class UserController {
   async show(req, res) {
     try {
       if (!this.userService.validateInput(req.params.id)) {
-        return res.status(400).json({ errors: 'Valores inválidos' });
+        return res.status(400).json({ error: 'Valores inválidos' });
       }
       const user = await this.userService.findUserById(req.params.id);
 
@@ -56,7 +56,7 @@ export default class UserController {
         ...userdata,
       });
     } catch (error) {
-      return res.status(500).json({ errors: 'Ocorreu um erro inesperado' });
+      return res.status(500).json({ error: 'Ocorreu um erro inesperado' });
     }
   }
 
@@ -77,7 +77,7 @@ export default class UserController {
       const { id: newId, email: newEmail } = updatedUser;
       return res.json({ newId, newEmail });
     } catch (error) {
-      return res.status(500).json({ errors: 'Ocorreu um erro inesperado' });
+      return res.status(500).json({ error: 'Ocorreu um erro inesperado' });
     }
   }
 
@@ -86,7 +86,7 @@ export default class UserController {
     try {
       if (!req.params.id) {
         return res.status(400).json({
-          errors: 'Valores inválidos',
+          error: 'Valores inválidos',
         });
       }
 
@@ -115,7 +115,7 @@ export default class UserController {
 
       return res.json('Usuário excluído com sucesso');
     } catch (error) {
-      return res.status(500).json({ errors: 'Ocorreu um erro inesperado' });
+      return res.status(500).json({ error: 'Ocorreu um erro inesperado' });
     }
   }
 }

@@ -1,23 +1,15 @@
 class CollectionService {
-  constructor(clientMongoDb, mongoDbValidation, whiteList) {
+  constructor(clientMongoDb, whiteList) {
     this.client = clientMongoDb;
-    this.mongoDbValidation = mongoDbValidation;
     this.whiteList = whiteList;
   }
 
-  async veryIfexistCollection(dataBaseName, collectionName) {
-    try {
-      const existCollection = await this.mongoDbValidation.existCollection(dataBaseName, collectionName);
-      return existCollection;
-    } catch (error) {
-      throw new Error('Um erro ocorreu durante a verificação de existencia de collection');
-    }
-  }
-
-  async createNewCollection(dataBaseName, collectionName) {
+  async createNewCollection(dataBaseName, collectionName, schemaValidator) {
     try {
       const database = this.client.db(dataBaseName);
-      await database.createCollection(collectionName, {
+
+      let schema = schemaValidator
+      if (!schema) schema = {
         validator: {
           $jsonSchema: {
             bsonType: 'object',
@@ -33,7 +25,9 @@ class CollectionService {
         },
         validationLevel: 'moderate',
         validationAction: 'error',
-      });
+      }
+
+      await database.createCollection(collectionName, schema);
 
       return true;
     } catch (err) {
@@ -42,12 +36,16 @@ class CollectionService {
     }
   }
 
-  async listCollectionsInDatabase(databaseName) {
+  async listCollectionsInDatabase(databaseName, query) {
     try {
-      const collections = (await this.client.db(databaseName).listCollections().toArray())
-        .filter((vl) => !vl.name.includes('dashboard_') && !this.whiteList.collections.includes(vl.name))
-        .map((vl) => vl.name);
-      return collections;
+      const collections = await this.client.db(databaseName).listCollections(query).toArray();
+      const collectionNames = collections.reduce((ac, cl) => {
+        if (!this.whiteList.collections.includes(cl.name)) {
+          ac.push(cl.name);
+        }
+        return ac;
+      }, []);
+      return collectionNames;
     } catch (error) {
       throw new Error(`Erro ao listar coleções: ${error.message}`);
     }

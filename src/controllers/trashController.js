@@ -1,129 +1,89 @@
-import { ObjectId } from 'mongodb';
-import MongoDb from '../database/MongoDbConnection';
-import whiteList from '../config/whiteList';
+export default class TrashController {
+  constructor(mongoDbValidation, trashService, collectionService) {
+    this.mongoDbValidation = mongoDbValidation;
+    this.trashService = trashService;
+    this.collectionService = collectionService;
+  }
 
-class TrashController {
   async index(req, res) {
-    const limit = req.params.limit || 100;
-
-    const mongoDb = new MongoDb(req.company);
-    const client = await mongoDb.connect();
-
     try {
-      await mongoDb.existDb(req.company);
+      const limit = req.params.limit || 100;
+      const databaseName = req.company;
 
-      const database = client.db(req.company);
-      const collections = (await database.listCollections().toArray()).reduce((ac, vl) => {
-        if (vl.name.includes('dashboard_') || whiteList.collections.includes(vl.name)) {
-          return ac;
-        }
-        ac.push(vl);
-        return ac;
-      }, []);
+      const collections = await this.collectionService.listCollectionsInDatabase(databaseName);
+      const valuesOnTrash = await this.trashService.listItemsAllTrash(databaseName, collections, limit);
 
-      const valuesOnTrash = await collections.reduce(async (acPromise, collection) => {
-        const ac = await acPromise;
-        const values = (await database.collection(collection.name).find({ active: false }).limit(Number(limit)).toArray());
-
-        const removeFieldDefault = values.map((value) => {
-          if (value.active) return;
-          const { default: defaultValue, active, ...rest } = value;
-          return rest;
-        });
-
-        if (removeFieldDefault.length >= 1) {
-          const exitObj = { collectionName: collection.name, values: removeFieldDefault };
-          ac.push(exitObj);
-        }
-        return ac;
-      }, Promise.resolve([]));
-
-      await req.historic.registerChange(client);
+      await req.historic.registerChange();
       return res.status(200).json(valuesOnTrash);
     } catch (e) {
-      return res.status(400).json({
-        errors: e.message || 'Ocorreu um erro inesperado',
+      console.log(e);
+      return res.status(500).json({
+        error: e.message || 'Ocorreu um erro inesperado',
       });
-    } finally {
-      mongoDb.close();
     }
   }
 
   async show(req, res) {
-    const { collectionName } = req.params;
-    const limit = req.params.limit || 100;
-
-    if (!collectionName) {
-      return res.status(400).json({
-        errors: 'Envie os valores corretos',
-      });
-    }
-
-    const mongoDb = new MongoDb(req.company);
-    const client = await mongoDb.connect();
-
     try {
-      await mongoDb.existDb(req.company);
+      const { collectionName } = req.params;
+      const limit = req.params.limit || 100;
 
-      const database = client.db(req.company);
-
-      if (!await mongoDb.existCollection(collectionName)) {
-        throw new Error('Essa predefinição não existe');
+      if (!collectionName) {
+        return res.status(400).json({
+          error: 'Envie os valores corretos',
+        });
       }
 
-      const collection = database.collection(collectionName);
+      const databaseName = req.company;
+      const existCollection = await this.mongoDbValidation.existCollection(databaseName, collectionName);
+      if (!existCollection) {
+        return res.status(400).json({
+          error: 'Não existe nenhuma predefinição com esse nome',
+        });
+      }
 
-      const values = await collection.find({ active: false }).limit(Number(limit)).toArray();
-      const removeFieldDefault = values.map((value) => {
-        const { default: defaultValue, active, ...rest } = value;
-        return rest;
-      });
+      const listItemsInTrash = await this.trashService.listItemsInTrash(databaseName, collectionName, limit);
 
-      await req.historic.registerChange(client);
-      return res.status(200).json(removeFieldDefault);
+      await req.historic.registerChange();
+      return res.status(200).json(listItemsInTrash);
     } catch (e) {
-      return res.status(400).json({
-        errors: e.message || 'Ocorreu um erro inesperado',
+      return res.status(500).json({
+        error: e.message || 'Ocorreu um erro inesperado',
       });
-    } finally {
-      mongoDb.close();
     }
   }
 
   async restore(req, res) {
-    const { id, collectionName } = req.params;
-
-    if (!collectionName || !id) {
-      return res.status(400).json({
-        errors: 'Valores inválidos',
-      });
-    }
-
-    const mongoDb = new MongoDb(req.company);
-    const client = await mongoDb.connect();
-
     try {
-      const collection = client.db(req.company).collection(collectionName);
-      const existValue = await collection.findOne({ _id: new ObjectId(id) });
-      if (!existValue || existValue.active) {
-        throw new Error(`O registro com o ID '${id}' está na lixeira '${collectionName}`);
+      const { id, collectionName } = req.params;
+
+      if (!collectionName || !id) {
+        return res.status(400).json({
+          error: 'Valores inválidos',
+        });
+      }
+      const databaseName = req.company;
+      const existCollection = await this.mongoDbValidation.existCollection(databaseName, collectionName);
+      if (!existCollection) {
+        return res.status(400).json({
+          error: 'Não existe nenhuma predefinição com esse nome',
+        });
       }
 
-      await collection.updateOne(
-        { _id: new ObjectId(id) },
-        { $set: { active: true } },
-      );
+      if (!await this.mongoDbValidation.existValue(databaseName, collectionName, id)) {
+        return res.status(400).json({ error: `O registro com o ID '${id}' não existe na tabela '${collectionName}` });
+      }
 
-      await req.historic.registerChange(client);
+      await this.trashService.restoreValue(databaseName, collectionName, id);
+
+      await req.historic.registerChange();
       return res.json({
         success: 'Restaurado com sucesso!',
       });
     } catch (e) {
       return res.status(400).json({
-        errors: e.message || 'Ocorreu um erro inesperado',
+        error: e.message || 'Ocorreu um erro inesperado',
       });
     }
   }
 }
-
-export default new TrashController();

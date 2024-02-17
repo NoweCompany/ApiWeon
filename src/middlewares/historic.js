@@ -1,5 +1,5 @@
-import { mongoInstance } from '../database';
-import MongoValidation from '../database/MongoValidation';
+import { mongoInstance } from '../database/index.js';
+import MongoValidation from '../database/MongoValidation.js';
 
 export default function historic(req, res, next) {
   const {

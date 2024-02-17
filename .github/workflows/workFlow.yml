@@ -16,7 +16,6 @@ jobs:
         with:
           node-version: "20.x"
       - run: npm i
-      - run: npm run build
 
   deploy-homologation:
     runs-on: ubuntu-22.04
@@ -37,7 +36,6 @@ jobs:
             cd /home/hmlg.apiweon.nowecompany.com.br/public_html_hmlg
             git pull origin main
             npm i
-            npm run build
             docker-compose run
             docker-compose restart
 
@@ -60,6 +58,5 @@ jobs:
             cd /home/apiweon.nowecompany.com.br/public_html
             git pull origin main
             npm i
-            npm run build
             docker-compose run
             docker-compose restart

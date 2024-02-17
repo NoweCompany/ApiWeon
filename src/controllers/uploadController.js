@@ -1,61 +1,12 @@
 import xlsx from 'xlsx';
 import busboy from 'busboy';
-import MongoDb from '../database/MongoDbConnection';
+import path from 'path';
 
-import FieldsConfig from '../services/fieldsconfigSevice';
-import convertType from '../services/convertTypeToBsonType';
-
-async function insertValuesCollection(collectionName, company, values) {
-  const mongoDb = new MongoDb(company);
-  const client = await mongoDb.connect();
-  const fieldConfig = new FieldsConfig(mongoDb);
-
-  const collection = client.db(company).collection(collectionName);
-
-  const fieldsList = await fieldConfig.listFields(company, collectionName);
-
-  const valuesFormated = values.map((doc) => {
-    const entries = Object.entries(doc);
-    const documentFormated = entries.reduce((ac, entrie) => {
-      const currentName = entrie[0];
-      const value = entrie[1];
-
-      const currentFieldInf = fieldsList.find((fieldInf) => fieldInf.currentName === currentName);
-      if (!currentFieldInf) throw new Error(`O campo ${currentName} não é um campo valido!`);
-
-      const { originalName, type: typeCurrentField, required } = currentFieldInf;
-
-      let convertedValue = null;
-      if (!required && !value) {
-        convertedValue = convertType(typeCurrentField, null);
-      } else if (required && !value) {
-        throw new Error(`O campo ${collectionName} é um campo obrigatorio, que deve ser preenchido!`);
-      } else {
-        convertedValue = convertType(typeCurrentField, value);
-      }
-
-      const docFormated = { ...ac, [originalName]: convertedValue };
-      return docFormated;
-    }, {});
-
-    // add default key in docuemtn
-    documentFormated.active = true;
-    documentFormated.default = 0;
-
-    return documentFormated;
-  });
-
-  console.log(valuesFormated);
-
-  try {
-    await collection.insertMany(valuesFormated);
-  } catch (error) {
-    throw new Error('Arquivo inválido, o arquivo deve seguir as validações da predefinição. Para isso baixe a planilha de exemplo.');
+export default class UploadController {
+  constructor(fieldconfigService, valueService) {
+    this.fieldconfigService = fieldconfigService
+    this.valueService = valueService
   }
-  mongoDb.close();
-  return true;
-}
-class UploadController {
   async store(req, res) {
     try {
       let collectionName = '';
@@ -64,7 +15,7 @@ class UploadController {
 
       bb.on('error', (error) => {
         res.status(400).json({
-          errors: error,
+          error: error,
         });
       });
 
@@ -81,12 +32,10 @@ class UploadController {
         const allowedFileTypes = ['application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', 'application/json'];
         if (!allowedFileTypes.includes(mimeType)) {
           return res.status(400).json({
-            errors: 'Tipo de arquivo não suportado. Envie um arquivo xlsx ou json.',
+            error: 'Tipo de arquivo não suportado. Envie um arquivo xlsx ou json.',
           });
         }
-
         const chunks = [];
-
         file.on('data', (chunk) => {
           chunks.push(chunk);
         });
@@ -101,21 +50,32 @@ class UploadController {
 
           const buffer = Buffer.concat(chunks);
           try {
+            const databaseName = req.company
+            let jsonData = []
+
             if (mimeType === 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet') {
-              const workbook = xlsx.read(buffer, { type: 'buffer' });
-              const sheetDataJson = xlsx.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]]);
-              await insertValuesCollection(collectionName, req.company, sheetDataJson);
+              const fields = (await this.fieldconfigService.listFields(databaseName, collectionName))
+                .map((field) => field.originalName)
+
+              const workbook = xlsx.read(buffer)
+              const firstSheetName = workbook.SheetNames[0];
+              const workSheet = workbook.Sheets[firstSheetName]
+
+              xlsx.utils.sheet_add_aoa(workSheet, [fields], { origin: "A1" })
+              jsonData = xlsx.utils.sheet_to_json(workSheet)
             } else if (mimeType === 'application/json') {
-              const jsonData = JSON.parse(buffer.toString());
-              await insertValuesCollection(collectionName, req.company, jsonData);
+              jsonData = JSON.parse(buffer.toString());
             }
+
+            const valuesFomated = await this.valueService.formateValueToInsert(databaseName, collectionName, jsonData)
+            await this.valueService.insertValues(databaseName, collectionName, valuesFomated)
 
             return res.status(200).json({
               message: 'Arquivo recebido e processado com sucesso!',
             });
           } catch (error) {
             res.status(400).json({
-              errors: error.message,
+              error: error.message,
             });
           }
         });
@@ -133,5 +93,3 @@ class UploadController {
     }
   }
 }
-
-export default new UploadController();
