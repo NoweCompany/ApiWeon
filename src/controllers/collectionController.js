@@ -11,7 +11,7 @@ class CollectionController {
       const { collectionName } = req.body;
       if (!collectionName) {
         return res.status(400).json({
-          error: 'Envie os valores corretos',
+          error: 'Envie os valores corretos.',
         });
       }
       const dataBaseName = req.company;
@@ -19,7 +19,7 @@ class CollectionController {
       const existCollection = await this.mongoDbValidation.existCollection(dataBaseName, collectionName);
       if (existCollection) {
         return res.status(400).json({
-          error: 'Já existe uma predefinição com esse nome',
+          error: 'Já existe uma predefinição com esse nome.',
         });
       }
 
@@ -95,7 +95,7 @@ class CollectionController {
 
     if (!collectionName || !newName) {
       return res.status(400).json({
-        error: 'Envie os valores corretos',
+        error: 'Envie os valores corretos.',
       });
     }
 
@@ -103,7 +103,7 @@ class CollectionController {
       const isValidColleciton = await this.collectionService.isValidCollectionName(collectionName, newName);
       if (!isValidColleciton) {
         return res.status(400).json({
-          error: 'Esses nome de collection não é validos',
+          error: 'Esse nome de collection não é valido',
         });
       }
 

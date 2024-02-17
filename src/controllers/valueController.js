@@ -55,11 +55,22 @@ class ValueController {
         return res.status(400).json({ error: 'Essa predefinição não existe' });
       }
 
-      const formatedValues = await this.valueService.listDocumentsActives(database, collectionName, limit);
-      const formaterListOfDocuments = this.valueService.formaterListOfDocuments(formatedValues);
+      const query = [
+        {
+          $match: {
+            active: true
+          }
+        },
+        {
+          $project: {
+            active: 0
+          }
+        }
+      ];
+      const formatedValues = await this.valueService.listDocuments(database, collectionName, limit, query);
 
       await req.historic.registerChange();
-      return res.status(200).json(formaterListOfDocuments);
+      return res.status(200).json(formatedValues);
     } catch (e) {
       return res.status(500).json({
         error: e.message || 'Ocorreu um erro inesperado',

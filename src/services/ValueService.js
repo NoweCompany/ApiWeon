@@ -13,18 +13,11 @@ export default class ValueService {
       // This "for" passes through each value in the array
       for (let i = 0; i < values.length; i += 1) {
         const value = values[i];
-        console.log(value);
         if (Object.keys(value).length <= 0 || !value) {
           return { errorMsg: 'Valores inválidos, todos objetos devem pelo menos ter uma chave válida de acordo com as regras de validação!' };
         }
         value.active = true;
-        // verify if each values has a appropriate key
-        Object.keys(properties).forEach((key) => {
-          const ValueOfProperty = properties[key];
-          if (!Object.prototype.hasOwnProperty.call(value, key) && !required.includes(key)) {
-            value[key] = this.convertTypeToBsonType(ValueOfProperty.bsonType, null);
-          }
-        });
+
         // Tranform type of each field validation
         for (const entriesOfValue of Object.entries(value)) {
           const keyOfDocument = entriesOfValue[0];
@@ -41,21 +34,6 @@ export default class ValueService {
     } catch (error) {
       console.log(error);
       throw new Error('Erro ao formatar valores');
-    }
-  }
-
-  formaterListOfDocuments(list) {
-    try {
-      const newlist = list.map((doc) => {
-        let newDoc = { ...doc };
-
-        const { default: defaultValue, active, ...rest } = newDoc;
-        return rest;
-      });
-
-      return newlist;
-    } catch (error) {
-      throw new Error('Error ao formatar lista de documentos de uma predefinição');
     }
   }
 
@@ -103,11 +81,11 @@ export default class ValueService {
     }
   }
 
-  async listDocumentsActives(databaseName, collectionName, limit) {
+  async listDocuments(databaseName, collectionName, limit, query) {
     try {
       const databaseRef = this.client.db(databaseName);
       const collection = databaseRef.collection(collectionName);
-      const values = await collection.find({ active: true }).limit(Number(limit)).toArray();
+      const values = await collection.aggregate(query).limit(Number(limit)).toArray();
 
       return values;
     } catch (error) {
