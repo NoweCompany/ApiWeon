@@ -16,51 +16,5 @@ function testConnections() {
     .catch((err) => console.log(err));
 }
 
+
 export { sequelizeInstance, mongoInstance, testConnections };
-
-// const { client } = mongoInstance;
-// client.on('connectionPoolCreated', (event) => {
-//   console.log('Pool de conexões criado:', event);
-// });
-
-// client.on('connectionPoolReady', () => {
-//   console.log('Pool de conexões pronto');
-// });
-
-// client.on('connectionPoolClosed', () => {
-//   console.log('Pool de conexões fechado');
-// });
-
-// client.on('connectionCreated', (event) => {
-//   console.log('Conexão criada:', event);
-// });
-
-// client.on('connectionReady', (event) => {
-//   console.log('Conexão pronta:');
-// });
-
-// client.on('connectionClosed', (event) => {
-//   console.log('Conexão fechada:', event);
-// });
-
-// client.on('connectionCheckOutStarted', () => {
-//   console.log('Iniciando checkout de conexão');
-// });
-
-// client.on('connectionCheckOutFailed', (event) => {
-//   console.log('Falha no checkout de conexão:', event);
-// });
-
-// client.on('connectionCheckedOut', () => {
-//   console.log('Checkout de conexão concluído: a operação adquirio a conexão com sucesso');
-// });
-
-// client.on('connectionCheckedIn', (event) => {
-//   console.log('Conexão devolvida ao pool:', event);
-// });
-
-// client.on('connectionPoolCleared', () => {
-//   console.log('Pool de conexões limpo');
-// });
-
-

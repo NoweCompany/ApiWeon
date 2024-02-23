@@ -1,11 +1,11 @@
 export default (req, res, next) => {
-  const allowedOrigins = [
-    'https://weon.nowecompany.com.br/',
-    'https://hmlg.weon.nowecompany.com.br/',
-    'http://127.0.0.1:5501/',
-  ];
+  // const allowedOrigins = [
+  //   'https://weon.nowecompany.com.br/',
+  //   'https://hmlg.weon.nowecompany.com.br/',
+  //   'http://127.0.0.1:5501/',
+  // ];
 
-  const { origin } = req.headers;
+  // const { origin } = req.headers;
 
   // if (allowedOrigins.includes(origin)) {
   //   res.header('Access-Control-Allow-Origin', origin);

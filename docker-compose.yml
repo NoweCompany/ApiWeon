@@ -4,14 +4,12 @@ services:
     build: ./
     container_name: "${DOCKER_CONTAINER_NAME}"
     volumes:
-      - ./dist:/home/api/dist
+      - ./:/home/api/
     ports:
       - "${API_PORT}:3300"
     env_file:
       - .env
     command: npm start
-    #depends_on:
-      #- mysqldb
     restart: always
     networks:
       - mynetwork
