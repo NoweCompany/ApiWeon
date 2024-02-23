@@ -8,7 +8,7 @@ import MongoDbValidation from '../database/MongoValidation.js';
 import { mongoInstance } from '../database/index.js';
 
 import ValueService from '../services/ValueService.js';
-import FieldsConfigService from '../services/FieldsconfigSevice.js';
+import FieldsConfigService from '../services/fieldsconfigSevice.js';
 import KpiService from '../services/KpiService.js';
 
 import KpiController from '../controllers/kpiController.js';

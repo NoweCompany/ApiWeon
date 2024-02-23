@@ -7,7 +7,7 @@ import permission from '../middlewares/permission.js';
 import MongoDbValidation from '../database/MongoValidation.js';
 import { mongoInstance } from '../database/index.js';
 
-import FieldsConfigService from '../services/FieldsconfigSevice.js';
+import FieldsConfigService from '../services/fieldsconfigSevice.js';
 import ChartsService from '../services/ChartsService.js';
 
 import ChartsController from '../controllers/chartsController.js';

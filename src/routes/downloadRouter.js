@@ -8,7 +8,7 @@ import MongoDbValidation from '../database/MongoValidation.js';
 import { mongoInstance } from '../database/index.js';
 
 import DownloadController from '../controllers/downloadController.js'
-import FieldsConfig from '../services/FieldsconfigSevice.js';
+import FieldsConfig from '../services/fieldsconfigSevice.js';
 import SheetService from '../services/SheetService.js';
 
 const fieldsconfigSevice = new FieldsConfig(mongoInstance.client)

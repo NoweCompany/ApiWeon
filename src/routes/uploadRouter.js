@@ -11,7 +11,7 @@ import { mongoInstance } from '../database/index.js';
 import MongoDbValidation from '../database/MongoValidation.js';
 import ValueService from '../services/ValueService.js';
 import convertTypeToBsonType from '../utils/convertTypeToBsonType.js';
-import FieldsConfig from '../services/FieldsconfigSevice.js';
+import FieldsConfig from '../services/fieldsconfigSevice.js';
 
 const fieldsconfigSevice = new FieldsConfig(mongoInstance.client)
 
