@@ -87,7 +87,7 @@ class FieldController {
       });
     } catch (e) {
       console.log(e);
-      return res.status(400).json({
+      return res.status(500).json({
         error: e.message || 'Ocorreu um erro inesperado',
       });
     }
@@ -146,7 +146,7 @@ class FieldController {
       });
     } catch (e) {
       console.log(e);
-      return res.status(400).json({
+      return res.status(500).json({
         error: e.message || 'Ocorreu um erro inesperado',
       });
     }

@@ -37,8 +37,8 @@ class CollectionController {
 
   async index(req, res) {
     try {
-      const query = { name: { $not: /^dashboard_/ } }
-      const collections = await this.collectionService.listCollectionsInDatabase(req.company, query);
+      const condicion = (collectionName) => !collectionName.startsWith('dashboard_')
+      const collections = await this.collectionService.listCollectionsInDatabase(req.company, condicion);
 
       const response = await Promise.all(collections.map(async (collectionName) => {
         const fields = await this.fieldsConfigService.listFields(req.company, collectionName);
@@ -50,8 +50,7 @@ class CollectionController {
 
       return res.status(200).json({ response });
     } catch (e) {
-      console.log(e);
-      return res.status(400).json({
+      return res.status(500).json({
         error: 'Ocorreu um erro inesperado',
       });
     }
@@ -84,7 +83,7 @@ class CollectionController {
         success: 'Sua predefinição foi excluida com sucesso',
       });
     } catch (e) {
-      return res.status(400).json({
+      return res.status(500).json({
         error: e.message || 'Ocorreu um erro inesperado',
       });
     }

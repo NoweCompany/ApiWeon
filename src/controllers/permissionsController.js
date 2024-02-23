@@ -46,7 +46,7 @@ class PermissionController {
 
       return res.status(200).json({ newPermission });
     } catch (e) {
-      return res.status(400).json({
+      return res.status(500).json({
         error: 'Ocorreu um erro inesperado',
       });
     }
@@ -72,7 +72,7 @@ class PermissionController {
 
       return res.status(200).json(users);
     } catch (e) {
-      return res.status(400).json({
+      return res.status(500).json({
         error: 'Ocorreu um erro inesperado',
       });
     }
@@ -90,7 +90,7 @@ class PermissionController {
 
       return res.status(200).json(users);
     } catch (e) {
-      return res.status(400).json({
+      return res.status(500).json({
         error: 'Ocorreu um erro inesperado',
       });
     }
@@ -138,7 +138,7 @@ class PermissionController {
 
       return res.status(200).json({ newPermission });
     } catch (e) {
-      return res.status(400).json({
+      return res.status(500).json({
         error: 'Ocorreu um erro inesperado',
       });
     }

@@ -36,17 +36,18 @@ class CollectionService {
     }
   }
 
-  async listCollectionsInDatabase(databaseName, query) {
+  async listCollectionsInDatabase(databaseName, condicion) {
     try {
-      const collections = await this.client.db(databaseName).listCollections(query).toArray();
+      const collections = await this.client.db(databaseName).listCollections({}).toArray();
       const collectionNames = collections.reduce((ac, cl) => {
-        if (!this.whiteList.collections.includes(cl.name)) {
+        if (!this.whiteList.collections.includes(cl.name) && condicion(cl.name)) {
           ac.push(cl.name);
         }
         return ac;
       }, []);
       return collectionNames;
     } catch (error) {
+      console.error(error);
       throw new Error(`Erro ao listar coleções: ${error.message}`);
     }
   }

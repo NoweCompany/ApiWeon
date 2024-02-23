@@ -51,7 +51,7 @@ export default class TokenController {
       });
     } catch (e) {
       console.log(e);
-      return res.status(400).json({
+      return res.status(500).json({
         error: `Ocorreu um erro inesperado ao logar: ${e.message}`,
       });
     }
@@ -84,7 +84,7 @@ export default class TokenController {
         ...userdata,
       });
     } catch (e) {
-      return res.status(400).json({
+      return res.status(500).json({
         error: `Ocorreu um erro inesperado, o verificar token: ${e.message}`,
       });
     }

@@ -78,8 +78,8 @@ export default class DashboardController {
   async index(req, res) {
     try {
       const dataBaseName = req.company;
-      const query = { name: { $regex: /dashboard/, $options: 'i' } };
-      const dashboards = await this.collectionService.listCollectionsInDatabase(dataBaseName, query)
+      const condicion = (collectionName) => collectionName.startsWith('dashboard_');
+      const dashboards = await this.collectionService.listCollectionsInDatabase(dataBaseName, condicion)
       const responseData = await this.valueService.listAllDocumentsInCollections(dataBaseName, dashboards, Infinity)
 
       await req.historic.registerChange();
