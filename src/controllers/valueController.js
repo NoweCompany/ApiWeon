@@ -40,7 +40,7 @@ class ValueController {
 
   async index(req, res) {
     const { collectionName } = req.params;
-    const limit = req.params.limit || Infinity;
+    const limit = req.params.limit || 10000;
 
     if (!collectionName) {
       return res.status(400).json({
@@ -80,10 +80,11 @@ class ValueController {
 
   async delete(req, res) {
     try {
-      const { id, collectionName } = req.params;
+      const { collectionName } = req.params;
+      const { valuesId } = req.body;
       const permanent = req.params.permanent === 'true';
 
-      if (!collectionName || !id) {
+      if (!collectionName || !valuesId || valuesId.length <= 0) {
         return res.status(400).json({
           error: 'Valores inválidos',
         });
@@ -95,33 +96,31 @@ class ValueController {
         return res.status(400).json({ error: 'Essa predefinição não existe' });
       }
 
-      if (!await this.mongoDbValidation.existValue(database, collectionName, id)) {
-        return res.status(400).json({ error: `O registro com o ID '${id}' não existe na tabela '${collectionName}` });
-      }
+      const errors = []
 
       if (permanent) {
-        const result = await this.valueService.deleteValue(database, collectionName, id);
-        if (result.deletedCount <= 0) {
-          return res.status(400).json({
-            error: 'Nenhum documento foi econtrado',
-          });
+        for (const id of valuesId) {
+          const result = await this.valueService.deleteValue(database, collectionName, id);
+          if (result.deletedCount <= 0) {
+            errors.push(`O documento com id ${id} não foi encontrado.`)
+          }
         }
-        await req.historic.registerChange();
-        return res.json(result);
       }
 
-      const result = await this.valueService.moveValueToTrash(database, collectionName, id);
-      if (result.modifiedCount <= 0) {
-        return res.status(400).json({
-          error: 'Nenhum documento foi econtrado',
-        });
+      for (const id of valuesId) {
+        const result = await this.valueService.moveValueToTrash(database, collectionName, id);
+        if (result.modifiedCount <= 0) {
+          errors.push(`O documento com id ${id} não foi encontrado.`)
+        }
       }
+
       await req.historic.registerChange();
-      return res.status(200).json(result);
+      if (errors.length >= 1) return res.status(400).json({ error: errors })
+      return res.status(200).json('Operação bem sucedida')
     } catch (e) {
       console.log(e);
       return res.status(500).json({
-        error: e.message || 'Ocorreu um erro inesperado',
+        error: 'Ocorreu um erro inesperado',
       });
     }
   }

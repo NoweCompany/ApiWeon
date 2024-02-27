@@ -127,6 +127,7 @@ export default class ValueService {
       const result = await collection.updateOne({ _id: this.convertTypeToBsonType('id', id) }, { $set: { active: false } });
       return result;
     } catch (error) {
+      console.log(error);
       throw new Error('Error ao mover valor para lixeira');
     }
   }

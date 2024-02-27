@@ -42,7 +42,7 @@ routes.put(
   valueController.update.bind(valueController),
 );
 routes.delete(
-  '/:id/:collectionName/:permanent',
+  '/:collectionName/:permanent',
   login.loginRequire.bind(login),
   permission('delet'),
   historic,
