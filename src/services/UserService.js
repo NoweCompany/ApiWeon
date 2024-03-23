@@ -44,6 +44,7 @@ export default class UserService {
 
       return userId;
     } catch (error) {
+      console.log(error);
       await t.rollback();
       throw new Error('Erro ao criar usuário');
     }
@@ -111,5 +112,13 @@ export default class UserService {
       return false;
     }
     return true;
+  }
+
+  validatePassword(password) {
+    if (String(password).length < 6 || String(password) > 50) {
+      return 'A senha precisa ter entre 6 e 50 caracteres'
+    }
+
+    return null
   }
 }
