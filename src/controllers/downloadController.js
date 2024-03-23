@@ -33,7 +33,7 @@ export default class DownloadController {
       return res.status(200).json({
         filePath,
         fileName,
-        url: `https://apiweon.nowecompany.com.br/${fileName}`,
+        url: `${process.env.URL}/${fileName}`,
       });
     } catch (e) {
       console.log(e);
@@ -70,7 +70,7 @@ export default class DownloadController {
       return res.status(200).json({
         filePath,
         fileName,
-        url: `https://apiweon.nowecompany.com.br/${fileName}`,
+        url: `${process.env.URL}/${fileName}`,
       });
     } catch (error) {
       return res.status(500).json({
